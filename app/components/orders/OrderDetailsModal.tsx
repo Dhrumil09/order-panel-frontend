@@ -7,9 +7,14 @@ interface OrderDetailsModalProps {
   onClose: () => void;
 }
 
-const OrderDetailsModal = ({ order, isOpen, onClose }: OrderDetailsModalProps) => {
+const OrderDetailsModal = ({
+  order,
+  isOpen,
+  onClose,
+}: OrderDetailsModalProps) => {
   const [notes, setNotes] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<Order['status']>("pending");
+  const [selectedStatus, setSelectedStatus] =
+    useState<Order["status"]>("pending");
 
   useEffect(() => {
     if (order) {
@@ -41,8 +46,8 @@ const OrderDetailsModal = ({ order, isOpen, onClose }: OrderDetailsModalProps) =
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -59,8 +64,18 @@ const OrderDetailsModal = ({ order, isOpen, onClose }: OrderDetailsModalProps) =
             className="p-2 text-[#666666] hover:text-[#9869E0] hover:bg-[#F7F3FF] rounded-lg transition-colors"
             aria-label="Close modal"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -73,7 +88,9 @@ const OrderDetailsModal = ({ order, isOpen, onClose }: OrderDetailsModalProps) =
               <p className="text-sm text-[#666666] mb-2">Status</p>
               <select
                 value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as Order['status'])}
+                onChange={(e) =>
+                  setSelectedStatus(e.target.value as Order["status"])
+                }
                 className="px-3 py-2 border border-[#DDDDDD] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9869E0] focus:border-transparent bg-white"
               >
                 <option value="pending">Pending</option>
@@ -91,11 +108,15 @@ const OrderDetailsModal = ({ order, isOpen, onClose }: OrderDetailsModalProps) =
 
           {/* Customer Information */}
           <div className="bg-[#F9F9F9] rounded-lg p-4">
-            <h3 className="font-medium text-[#1F1F1F] mb-3">Customer Information</h3>
+            <h3 className="font-medium text-[#1F1F1F] mb-3">
+              Customer Information
+            </h3>
             <div className="space-y-2">
               <div>
                 <p className="text-sm text-[#666666]">Name</p>
-                <p className="font-medium text-[#1F1F1F]">{order.customerName}</p>
+                <p className="font-medium text-[#1F1F1F]">
+                  {order.customerName}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-[#666666]">Address</p>
@@ -125,20 +146,63 @@ const OrderDetailsModal = ({ order, isOpen, onClose }: OrderDetailsModalProps) =
                   <table className="w-full">
                     <thead className="bg-[#EAE2FA]">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-[#1F1F1F]">Item</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-[#1F1F1F]">Quantity</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-[#1F1F1F]">
+                          Item
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-[#1F1F1F]">
+                          Boxes
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-[#1F1F1F]">
+                          Pieces
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-[#1F1F1F]">
+                          Pack
+                        </th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-[#1F1F1F]">
+                          Total
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
-                      {order.orderItems.map((item) => (
-                        <tr key={item.id} className="border-t border-[#DDDDDD]">
-                          <td className="px-4 py-3">
-                            <p className="font-medium text-[#1F1F1F]">{item.name}</p>
-                            <p className="text-sm text-[#666666]">ID: {item.id}</p>
-                          </td>
-                          <td className="px-4 py-3 text-center text-[#1F1F1F]">{item.quantity}</td>
-                        </tr>
-                      ))}
+                      {order.orderItems.map((item) => {
+                        const totalPieces = item.pieces || 0;
+                        const totalPackPieces =
+                          (item.pack || 0) * (item.packSize || 1);
+                        const totalItems = totalPieces + totalPackPieces;
+
+                        return (
+                          <tr
+                            key={item.id}
+                            className="border-t border-[#DDDDDD]"
+                          >
+                            <td className="px-4 py-3">
+                              <p className="font-medium text-[#1F1F1F]">
+                                {item.name}
+                              </p>
+                              <p className="text-sm text-[#666666]">
+                                ID: {item.id}
+                              </p>
+                              {item.packSize && item.availableInPack && (
+                                <p className="text-xs text-[#666666]">
+                                  Pack size: {item.packSize} pieces
+                                </p>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-center text-[#1F1F1F]">
+                              {item.boxes || 0}
+                            </td>
+                            <td className="px-4 py-3 text-center text-[#1F1F1F]">
+                              {item.availableInPieces ? item.pieces || 0 : "-"}
+                            </td>
+                            <td className="px-4 py-3 text-center text-[#1F1F1F]">
+                              {item.availableInPack ? item.pack || 0 : "-"}
+                            </td>
+                            <td className="px-4 py-3 text-center font-medium text-[#1F1F1F]">
+                              {totalItems}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -167,7 +231,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }: OrderDetailsModalProps) =
             >
               Close
             </button>
-            <button 
+            <button
               onClick={handleUpdateOrder}
               className="px-4 py-2 bg-[#9869E0] text-white rounded-lg hover:bg-[#7B40CC] transition-colors"
             >
@@ -180,4 +244,4 @@ const OrderDetailsModal = ({ order, isOpen, onClose }: OrderDetailsModalProps) =
   );
 };
 
-export default OrderDetailsModal; 
+export default OrderDetailsModal;

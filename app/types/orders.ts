@@ -1,7 +1,14 @@
 export interface OrderItem {
   id: string;
   name: string;
-  quantity: number;
+  boxes: number;
+  pieces?: number;
+  pack?: number;
+  productId?: string;
+  variantId?: string;
+  availableInPieces?: boolean;
+  availableInPack?: boolean;
+  packSize?: number;
 }
 
 export interface Order {
@@ -25,7 +32,7 @@ export interface CreateFormData {
   customerAddress: string;
   customerEmail: string;
   customerPhone: string;
-  status: Order['status'];
+  status: Order["status"];
   orderItems: OrderItem[];
   notes: string;
 }
@@ -35,7 +42,7 @@ export const statusColors = {
   processing: "bg-[#4D8BF5] text-white",
   shipped: "bg-[#9869E0] text-white",
   delivered: "bg-[#4BB543] text-white",
-  cancelled: "bg-[#E74C3C] text-white"
+  cancelled: "bg-[#E74C3C] text-white",
 } as const;
 
 export const statusLabels = {
@@ -43,5 +50,5 @@ export const statusLabels = {
   processing: "Processing",
   shipped: "Shipped",
   delivered: "Delivered",
-  cancelled: "Cancelled"
-} as const; 
+  cancelled: "Cancelled",
+} as const;

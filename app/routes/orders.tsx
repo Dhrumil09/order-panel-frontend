@@ -28,7 +28,7 @@ const mockCustomers: Customer[] = [
     registrationDate: "2024-01-15",
     totalOrders: 45,
     totalSpent: 125000,
-    notes: "Premium customer, prefers express delivery"
+    notes: "Premium customer, prefers express delivery",
   },
   {
     id: "#CUST002",
@@ -45,7 +45,7 @@ const mockCustomers: Customer[] = [
     registrationDate: "2024-01-14",
     totalOrders: 32,
     totalSpent: 89000,
-    notes: "Bulk order customer"
+    notes: "Bulk order customer",
   },
   {
     id: "#CUST003",
@@ -62,7 +62,7 @@ const mockCustomers: Customer[] = [
     registrationDate: "2024-01-13",
     totalOrders: 18,
     totalSpent: 45000,
-    notes: "Temporarily closed for renovation"
+    notes: "Temporarily closed for renovation",
   },
   {
     id: "#CUST004",
@@ -79,7 +79,7 @@ const mockCustomers: Customer[] = [
     registrationDate: "2024-01-12",
     totalOrders: 67,
     totalSpent: 189000,
-    notes: "High-value customer, VIP treatment"
+    notes: "High-value customer, VIP treatment",
   },
   {
     id: "#CUST005",
@@ -96,8 +96,8 @@ const mockCustomers: Customer[] = [
     registrationDate: "2024-01-11",
     totalOrders: 0,
     totalSpent: 0,
-    notes: "New registration, awaiting verification"
-  }
+    notes: "New registration, awaiting verification",
+  },
 ];
 
 // Mock product data for order creation
@@ -192,7 +192,7 @@ const mockProducts: Product[] = [
     isOutOfStock: false,
     availableInPieces: true,
     availableInPack: false,
-  }
+  },
 ];
 
 const mockCompanies: Company[] = [
@@ -216,8 +216,6 @@ export function meta() {
   return createPageMeta("Orders", "Manage orders.");
 }
 
-
-
 const mockOrders: Order[] = [
   {
     id: "#ORD001",
@@ -229,12 +227,28 @@ const mockOrders: Order[] = [
     customerEmail: "rajesh.kumar@gmail.com",
     customerPhone: "+91 98765 43210",
     orderItems: [
-      { id: "1", name: "Wireless Headphones", quantity: 1 },
-      { id: "2", name: "Phone Case", quantity: 2 }
+      {
+        id: "1",
+        name: "Wireless Headphones",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "2",
+        name: "Phone Case",
+        boxes: 1,
+        pieces: 2,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
     ],
     shippingMethod: "Express Delivery",
     trackingNumber: "DTDC123456789",
-    notes: "Customer requested signature confirmation"
+    notes: "Customer requested signature confirmation",
   },
   {
     id: "#ORD002",
@@ -246,11 +260,27 @@ const mockOrders: Order[] = [
     customerEmail: "priya.sharma@yahoo.com",
     customerPhone: "+91 87654 32109",
     orderItems: [
-      { id: "3", name: "Laptop Stand", quantity: 1 },
-      { id: "4", name: "USB Cable", quantity: 1 }
+      {
+        id: "3",
+        name: "Laptop Stand",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "4",
+        name: "USB Cable",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
     ],
     shippingMethod: "Free Delivery",
-    notes: "Gift order - please include gift receipt"
+    notes: "Gift order - please include gift receipt",
   },
   {
     id: "#ORD003",
@@ -262,13 +292,37 @@ const mockOrders: Order[] = [
     customerEmail: "amit.patel@hotmail.com",
     customerPhone: "+91 76543 21098",
     orderItems: [
-      { id: "5", name: "Smart Watch", quantity: 1 },
-      { id: "6", name: "Screen Protector", quantity: 2 },
-      { id: "7", name: "Charging Cable", quantity: 2 }
+      {
+        id: "5",
+        name: "Smart Watch",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "6",
+        name: "Screen Protector",
+        boxes: 1,
+        pieces: 2,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "7",
+        name: "Charging Cable",
+        boxes: 1,
+        pieces: 2,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
     ],
     shippingMethod: "Standard Delivery",
     trackingNumber: "BLUEDART987654321",
-    notes: "Delivered successfully on 2024-01-15"
+    notes: "Delivered successfully on 2024-01-15",
   },
   {
     id: "#ORD004",
@@ -280,13 +334,38 @@ const mockOrders: Order[] = [
     customerEmail: "neha.singh@gmail.com",
     customerPhone: "+91 65432 10987",
     orderItems: [
-      { id: "8", name: "Bluetooth Speaker", quantity: 1 },
-      { id: "9", name: "Phone Mount", quantity: 1 },
-      { id: "10", name: "Power Bank", quantity: 2 }
+      {
+        id: "8",
+        name: "Bluetooth Speaker",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "9",
+        name: "Phone Mount",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "10",
+        name: "Power Bank",
+        boxes: 1,
+        pieces: 2,
+        pack: 1,
+        availableInPieces: true,
+        availableInPack: true,
+        packSize: 5,
+      },
     ],
     shippingMethod: "Express Delivery",
     trackingNumber: "FEDEX456789123",
-    notes: "Customer prefers afternoon delivery"
+    notes: "Customer prefers afternoon delivery",
   },
   {
     id: "#ORD005",
@@ -298,11 +377,27 @@ const mockOrders: Order[] = [
     customerEmail: "vikram.reddy@yahoo.com",
     customerPhone: "+91 54321 09876",
     orderItems: [
-      { id: "11", name: "Wireless Mouse", quantity: 1 },
-      { id: "12", name: "Mouse Pad", quantity: 1 }
+      {
+        id: "11",
+        name: "Wireless Mouse",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "12",
+        name: "Mouse Pad",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
     ],
     shippingMethod: "Free Delivery",
-    notes: "Standard processing time"
+    notes: "Standard processing time",
   },
   {
     id: "#ORD006",
@@ -314,10 +409,18 @@ const mockOrders: Order[] = [
     customerEmail: "anjali.gupta@gmail.com",
     customerPhone: "+91 43210 98765",
     orderItems: [
-      { id: "13", name: "Keyboard", quantity: 1 }
+      {
+        id: "13",
+        name: "Keyboard",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
     ],
     shippingMethod: "Standard Delivery",
-    notes: "Awaiting payment confirmation"
+    notes: "Awaiting payment confirmation",
   },
   {
     id: "#ORD007",
@@ -329,14 +432,46 @@ const mockOrders: Order[] = [
     customerEmail: "suresh.iyer@hotmail.com",
     customerPhone: "+91 32109 87654",
     orderItems: [
-      { id: "14", name: "Gaming Headset", quantity: 1 },
-      { id: "15", name: "Gaming Mouse", quantity: 1 },
-      { id: "16", name: "Mouse Feet", quantity: 2 },
-      { id: "17", name: "Cable Clips", quantity: 2 }
+      {
+        id: "14",
+        name: "Gaming Headset",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "15",
+        name: "Gaming Mouse",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "16",
+        name: "Mouse Feet",
+        boxes: 1,
+        pieces: 2,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
+      {
+        id: "17",
+        name: "Cable Clips",
+        boxes: 1,
+        pieces: 2,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
     ],
     shippingMethod: "Free Delivery",
     trackingNumber: "DHL321654987",
-    notes: "Delivered on 2024-01-12"
+    notes: "Delivered on 2024-01-12",
   },
   {
     id: "#ORD008",
@@ -348,16 +483,20 @@ const mockOrders: Order[] = [
     customerEmail: "meera.nair@gmail.com",
     customerPhone: "+91 21098 76543",
     orderItems: [
-      { id: "18", name: "Webcam", quantity: 1 }
+      {
+        id: "18",
+        name: "Webcam",
+        boxes: 1,
+        pieces: 1,
+        pack: undefined,
+        availableInPieces: true,
+        availableInPack: false,
+      },
     ],
     shippingMethod: "Standard Delivery",
-    notes: "Cancelled by customer on 2024-01-09"
-  }
+    notes: "Cancelled by customer on 2024-01-09",
+  },
 ];
-
-
-
-
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -366,7 +505,9 @@ export default function Orders() {
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<"customerName" | "date" | "status">("date");
+  const [sortBy, setSortBy] = useState<"customerName" | "date" | "status">(
+    "date"
+  );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -378,12 +519,16 @@ export default function Orders() {
   const itemsPerPage = 5;
 
   const filteredAndSortedOrders = useMemo(() => {
-    let filtered = mockOrders.filter(order => {
-      const matchesSearch = order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           order.customerAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           order.id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter.length === 0 || statusFilter.includes(order.status);
-      
+    let filtered = mockOrders.filter((order) => {
+      const matchesSearch =
+        order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customerAddress
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        order.id.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        statusFilter.length === 0 || statusFilter.includes(order.status);
+
       // Date filtering logic
       const orderDate = new Date(order.date);
       const today = new Date();
@@ -393,9 +538,9 @@ export default function Orders() {
       lastWeek.setDate(lastWeek.getDate() - 7);
       const lastMonth = new Date(today);
       lastMonth.setMonth(lastMonth.getMonth() - 1);
-      
+
       let matchesDate = true;
-      
+
       // Handle custom date range
       if (dateFilter === "custom" && customStartDate && customEndDate) {
         const startDate = new Date(customStartDate);
@@ -422,7 +567,7 @@ export default function Orders() {
             break;
         }
       }
-      
+
       return matchesSearch && matchesStatus && matchesDate;
     });
 
@@ -455,7 +600,15 @@ export default function Orders() {
     });
 
     return filtered;
-  }, [searchTerm, statusFilter, sortBy, sortOrder, dateFilter, customStartDate, customEndDate]);
+  }, [
+    searchTerm,
+    statusFilter,
+    sortBy,
+    sortOrder,
+    dateFilter,
+    customStartDate,
+    customEndDate,
+  ]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredAndSortedOrders.length / itemsPerPage);
@@ -466,7 +619,15 @@ export default function Orders() {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, dateFilter, customStartDate, customEndDate, sortBy, sortOrder]);
+  }, [
+    searchTerm,
+    statusFilter,
+    dateFilter,
+    customStartDate,
+    customEndDate,
+    sortBy,
+    sortOrder,
+  ]);
 
   const handleSort = (field: "customerName" | "date" | "status") => {
     if (sortBy === field) {
@@ -491,7 +652,7 @@ export default function Orders() {
     statusFilter.length > 0,
     dateFilter !== "all",
     customStartDate,
-    customEndDate
+    customEndDate,
   ].filter(Boolean).length;
 
   const SortIcon = ({ field }: { field: string }) => {
@@ -503,7 +664,12 @@ export default function Orders() {
         stroke="currentColor"
         viewBox="0 0 24 24"
       >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 15l7-7 7 7"
+        />
       </svg>
     );
   };
@@ -527,7 +693,9 @@ export default function Orders() {
   const handleConfirmDelete = () => {
     if (orderToDelete) {
       // Remove the order from the mock data
-      const orderIndex = mockOrders.findIndex(order => order.id === orderToDelete.id);
+      const orderIndex = mockOrders.findIndex(
+        (order) => order.id === orderToDelete.id
+      );
       if (orderIndex !== -1) {
         mockOrders.splice(orderIndex, 1);
         // Force re-render by updating a state
@@ -549,23 +717,36 @@ export default function Orders() {
 
   const handleSaveOrder = (formData: CreateFormData) => {
     const newOrder: Order = {
-      id: `#ORD${String(mockOrders.length + 1).padStart(3, '0')}`,
+      id: `#ORD${String(mockOrders.length + 1).padStart(3, "0")}`,
       customerName: formData.customerName,
       customerAddress: formData.customerAddress,
       customerEmail: formData.customerEmail,
       customerPhone: formData.customerPhone,
       status: formData.status,
-      date: new Date().toISOString().split('T')[0],
-      items: formData.orderItems.reduce((sum: number, item) => sum + item.quantity, 0),
-      orderItems: formData.orderItems,
-      notes: formData.notes
+      date: new Date().toISOString().split("T")[0],
+      items: formData.orderItems.reduce((sum: number, item) => {
+        const piecesTotal = item.pieces || 0;
+        const packTotal = (item.pack || 0) * (item.packSize || 1);
+        return sum + piecesTotal + packTotal;
+      }, 0),
+      orderItems: formData.orderItems.map((item) => ({
+        id: item.id,
+        name: item.name,
+        boxes: item.boxes,
+        pieces: item.pieces,
+        pack: item.pack,
+        productId: item.productId,
+        variantId: item.variantId,
+        availableInPieces: item.availableInPieces,
+        availableInPack: item.availableInPack,
+        packSize: item.packSize,
+      })),
+      notes: formData.notes,
     };
 
     mockOrders.unshift(newOrder); // Add to beginning of array
     setIsCreateModalOpen(false);
   };
-
-
 
   return (
     <AdminLayout>
@@ -601,12 +782,12 @@ export default function Orders() {
         onSearchChange={setSearchTerm}
         statusFilter={statusFilter}
         onStatusFilterChange={(status) => {
-                      if (statusFilter.includes(status)) {
-                        setStatusFilter(statusFilter.filter(s => s !== status));
-                      } else {
-                        setStatusFilter([...statusFilter, status]);
-                      }
-                    }}
+          if (statusFilter.includes(status)) {
+            setStatusFilter(statusFilter.filter((s) => s !== status));
+          } else {
+            setStatusFilter([...statusFilter, status]);
+          }
+        }}
         dateFilter={dateFilter}
         onDateFilterChange={setDateFilter}
         customStartDate={customStartDate}
@@ -661,10 +842,10 @@ export default function Orders() {
       />
 
       {/* Order Details Modal */}
-      <OrderDetailsModal 
-        order={selectedOrder} 
-        isOpen={isModalOpen} 
-        onClose={handleCloseModal} 
+      <OrderDetailsModal
+        order={selectedOrder}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
       />
 
       {/* Delete Confirmation Modal */}
