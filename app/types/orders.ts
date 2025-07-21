@@ -20,6 +20,7 @@ export interface Order {
 }
 
 export interface CreateFormData {
+  customerId: string;
   customerName: string;
   customerAddress: string;
   customerEmail: string;

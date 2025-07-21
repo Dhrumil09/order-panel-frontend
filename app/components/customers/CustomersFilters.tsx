@@ -15,6 +15,7 @@ interface CustomersFiltersProps {
   statusLabels: Record<string, string>;
   availableAreas: string[];
   availableCities: string[];
+  showCityFilter?: boolean;
 }
 
 const CustomersFilters = ({
@@ -33,7 +34,8 @@ const CustomersFilters = ({
   statusColors,
   statusLabels,
   availableAreas,
-  availableCities
+  availableCities,
+  showCityFilter = true
 }: CustomersFiltersProps) => {
   return (
     <>
@@ -161,24 +163,26 @@ const CustomersFilters = ({
             </div>
 
             {/* City Filter */}
-            <div>
-              <label className="block text-sm font-medium text-[#1F1F1F] mb-2 sm:mb-3">City</label>
-              <div className="flex flex-wrap gap-2">
-                {availableCities.map((city) => (
-                  <button
-                    key={city}
-                    onClick={() => onCityFilterChange(city)}
-                    className={`px-2 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
-                      cityFilter.includes(city)
-                        ? 'bg-[#9869E0] text-white'
-                        : 'bg-white border border-[#DDDDDD] text-[#666666] hover:bg-[#F7F3FF]'
-                    } focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20`}
-                  >
-                    {city}
-                  </button>
-                ))}
+            {showCityFilter && (
+              <div>
+                <label className="block text-sm font-medium text-[#1F1F1F] mb-2 sm:mb-3">City</label>
+                <div className="flex flex-wrap gap-2">
+                  {availableCities.map((city) => (
+                    <button
+                      key={city}
+                      onClick={() => onCityFilterChange(city)}
+                      className={`px-2 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                        cityFilter.includes(city)
+                          ? 'bg-[#9869E0] text-white'
+                          : 'bg-white border border-[#DDDDDD] text-[#666666] hover:bg-[#F7F3FF]'
+                      } focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20`}
+                    >
+                      {city}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>

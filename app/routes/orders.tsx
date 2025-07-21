@@ -9,6 +9,208 @@ import OrdersFilters from "~/components/orders/OrdersFilters";
 import Pagination from "~/components/orders/Pagination";
 import type { Order, CreateFormData } from "~/types/orders";
 import { statusColors, statusLabels } from "~/types/orders";
+import type { Customer } from "~/types/customers";
+
+// Mock customer data for order creation
+const mockCustomers: Customer[] = [
+  {
+    id: "#CUST001",
+    shopName: "Kumar Electronics",
+    ownerName: "Rajesh Kumar",
+    ownerPhone: "+91 98765 43210",
+    ownerEmail: "rajesh.kumar@gmail.com",
+    address: "123 MG Road, Koramangala",
+    area: "Koramangala",
+    city: "Bangalore",
+    state: "Karnataka",
+    pincode: "560034",
+    status: "active",
+    registrationDate: "2024-01-15",
+    totalOrders: 45,
+    totalSpent: 125000,
+    notes: "Premium customer, prefers express delivery"
+  },
+  {
+    id: "#CUST002",
+    shopName: "Sharma Mobile Store",
+    ownerName: "Priya Sharma",
+    ownerPhone: "+91 87654 32109",
+    ownerEmail: "priya.sharma@yahoo.com",
+    address: "456 Andheri West, Near Station",
+    area: "Andheri West",
+    city: "Mumbai",
+    state: "Maharashtra",
+    pincode: "400058",
+    status: "active",
+    registrationDate: "2024-01-14",
+    totalOrders: 32,
+    totalSpent: 89000,
+    notes: "Bulk order customer"
+  },
+  {
+    id: "#CUST003",
+    shopName: "Patel Gadgets",
+    ownerName: "Amit Patel",
+    ownerPhone: "+91 76543 21098",
+    ownerEmail: "amit.patel@hotmail.com",
+    address: "789 Connaught Place, Central Delhi",
+    area: "Connaught Place",
+    city: "New Delhi",
+    state: "Delhi",
+    pincode: "110001",
+    status: "inactive",
+    registrationDate: "2024-01-13",
+    totalOrders: 18,
+    totalSpent: 45000,
+    notes: "Temporarily closed for renovation"
+  },
+  {
+    id: "#CUST004",
+    shopName: "Singh Tech Solutions",
+    ownerName: "Neha Singh",
+    ownerPhone: "+91 65432 10987",
+    ownerEmail: "neha.singh@gmail.com",
+    address: "321 Salt Lake City, Sector 1",
+    area: "Salt Lake City",
+    city: "Kolkata",
+    state: "West Bengal",
+    pincode: "700091",
+    status: "active",
+    registrationDate: "2024-01-12",
+    totalOrders: 67,
+    totalSpent: 189000,
+    notes: "High-value customer, VIP treatment"
+  },
+  {
+    id: "#CUST005",
+    shopName: "Reddy Digital Hub",
+    ownerName: "Vikram Reddy",
+    ownerPhone: "+91 54321 09876",
+    ownerEmail: "vikram.reddy@yahoo.com",
+    address: "654 Banjara Hills, Road No. 12",
+    area: "Banjara Hills",
+    city: "Hyderabad",
+    state: "Telangana",
+    pincode: "500034",
+    status: "pending",
+    registrationDate: "2024-01-11",
+    totalOrders: 0,
+    totalSpent: 0,
+    notes: "New registration, awaiting verification"
+  }
+];
+
+// Mock product data for order creation
+interface ProductVariant {
+  id: string;
+  name: string;
+  mrp: number;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  companyId: string;
+  categoryId: string;
+  variants: ProductVariant[];
+  isOutOfStock: boolean;
+  availableInPieces: boolean;
+  availableInPack: boolean;
+  packSize?: number;
+}
+
+interface Company {
+  id: string;
+  name: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+const mockProducts: Product[] = [
+  {
+    id: "1",
+    name: "Premium Coffee Beans",
+    companyId: "1",
+    categoryId: "1",
+    variants: [
+      { id: "1", name: "250g", mrp: 299 },
+      { id: "2", name: "500g", mrp: 499 },
+    ],
+    isOutOfStock: false,
+    availableInPieces: true,
+    availableInPack: true,
+    packSize: 12,
+  },
+  {
+    id: "2",
+    name: "Organic Green Tea",
+    companyId: "2",
+    categoryId: "2",
+    variants: [{ id: "1", name: "100g", mrp: 199 }],
+    isOutOfStock: true,
+    availableInPieces: true,
+    availableInPack: false,
+  },
+  {
+    id: "3",
+    name: "Wireless Headphones",
+    companyId: "3",
+    categoryId: "4",
+    variants: [
+      { id: "1", name: "Basic", mrp: 1299 },
+      { id: "2", name: "Premium", mrp: 2499 },
+    ],
+    isOutOfStock: false,
+    availableInPieces: true,
+    availableInPack: false,
+  },
+  {
+    id: "4",
+    name: "Smart Watch",
+    companyId: "4",
+    categoryId: "5",
+    variants: [
+      { id: "1", name: "Sport", mrp: 3999 },
+      { id: "2", name: "Premium", mrp: 8999 },
+    ],
+    isOutOfStock: false,
+    availableInPieces: true,
+    availableInPack: false,
+  },
+  {
+    id: "5",
+    name: "Bluetooth Speaker",
+    companyId: "5",
+    categoryId: "6",
+    variants: [
+      { id: "1", name: "Portable", mrp: 899 },
+      { id: "2", name: "Home", mrp: 1499 },
+    ],
+    isOutOfStock: false,
+    availableInPieces: true,
+    availableInPack: false,
+  }
+];
+
+const mockCompanies: Company[] = [
+  { id: "1", name: "Coffee Co." },
+  { id: "2", name: "Healthy Herbs" },
+  { id: "3", name: "Tech Gadgets" },
+  { id: "4", name: "Smart Wearables" },
+  { id: "5", name: "Audio Solutions" },
+];
+
+const mockCategories: Category[] = [
+  { id: "1", name: "Beverages" },
+  { id: "2", name: "Tea & Infusions" },
+  { id: "3", name: "Snacks" },
+  { id: "4", name: "Audio" },
+  { id: "5", name: "Wearables" },
+  { id: "6", name: "Speakers" },
+];
 
 export function meta() {
   return createPageMeta("Orders", "Manage orders.");
@@ -452,6 +654,10 @@ export default function Orders() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSave={handleSaveOrder}
+        customers={mockCustomers}
+        products={mockProducts}
+        companies={mockCompanies}
+        categories={mockCategories}
       />
 
       {/* Order Details Modal */}

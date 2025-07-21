@@ -1,14 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { OrderItem, CreateFormData } from "~/types/orders";
+import type { Customer } from "~/types/customers";
+
+interface Product {
+  id: string;
+  name: string;
+  companyId: string;
+  categoryId: string;
+  variants: ProductVariant[];
+  isOutOfStock: boolean;
+  availableInPieces: boolean;
+  availableInPack: boolean;
+  packSize?: number;
+}
+
+interface ProductVariant {
+  id: string;
+  name: string;
+  mrp: number;
+}
+
+interface Company {
+  id: string;
+  name: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 interface CreateOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (formData: CreateFormData) => void;
+  customers: Customer[];
+  products: Product[];
+  companies: Company[];
+  categories: Category[];
 }
 
-const CreateOrderModal = ({ isOpen, onClose, onSave }: CreateOrderModalProps) => {
+const CreateOrderModal = ({ isOpen, onClose, onSave, customers, products, companies, categories }: CreateOrderModalProps) => {
   const [formData, setFormData] = useState<CreateFormData>({
+    customerId: "",
     customerName: "",
     customerAddress: "",
     customerEmail: "",
@@ -17,6 +51,48 @@ const CreateOrderModal = ({ isOpen, onClose, onSave }: CreateOrderModalProps) =>
     orderItems: [{ id: "1", name: "", quantity: 1 }],
     notes: ""
   });
+
+  // Search states
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [productSearchTerm, setProductSearchTerm] = useState("");
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  const [showProductSuggestions, setShowProductSuggestions] = useState(false);
+  const [selectedProductVariant, setSelectedProductVariant] = useState<ProductVariant | null>(null);
+
+  // Filtered customers and products based on search
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearchTerm.trim()) return customers.slice(0, 10); // Show first 10 if no search
+    return customers
+      .filter(customer => 
+        customer.shopName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+        customer.ownerName.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+        customer.ownerPhone.includes(customerSearchTerm)
+      )
+      .slice(0, 10); // Limit to 10 results
+  }, [customers, customerSearchTerm]);
+
+  const filteredProducts = useMemo(() => {
+    if (!productSearchTerm.trim()) return products.slice(0, 10); // Show first 10 if no search
+    return products
+      .filter(product => 
+        product.name.toLowerCase().includes(productSearchTerm.toLowerCase())
+      )
+      .slice(0, 10); // Limit to 10 results
+  }, [products, productSearchTerm]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.customer-search') && !target.closest('.product-search')) {
+        setShowCustomerSuggestions(false);
+        setShowProductSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -30,6 +106,51 @@ const CreateOrderModal = ({ isOpen, onClose, onSave }: CreateOrderModalProps) =>
       ...formData,
       orderItems: [...formData.orderItems, newItem]
     });
+  };
+
+  const getCompanyName = (companyId: string) => {
+    return companies.find(company => company.id === companyId)?.name || "";
+  };
+
+  const getCategoryName = (categoryId: string) => {
+    return categories.find(category => category.id === categoryId)?.name || "";
+  };
+
+  const handleCustomerSelect = (customer: Customer) => {
+    setFormData({
+      ...formData,
+      customerId: customer.id,
+      customerName: customer.shopName,
+      customerAddress: `${customer.address}, ${customer.area}, ${customer.city}, ${customer.state} - ${customer.pincode}`,
+      customerEmail: customer.ownerEmail,
+      customerPhone: customer.ownerPhone
+    });
+    setCustomerSearchTerm(customer.shopName);
+    setShowCustomerSuggestions(false);
+  };
+
+  const handleProductSelect = (product: Product, variant: ProductVariant) => {
+    setSelectedProductVariant(variant);
+    setProductSearchTerm(product.name);
+    setShowProductSuggestions(false);
+  };
+
+  const handleAddSelectedProduct = () => {
+    if (!selectedProductVariant) return;
+    
+    const newItem: OrderItem = {
+      id: Date.now().toString(),
+      name: `${selectedProductVariant.name} - ₹${selectedProductVariant.mrp}`,
+      quantity: 1
+    };
+    
+    setFormData({
+      ...formData,
+      orderItems: [...formData.orderItems, newItem]
+    });
+    
+    setSelectedProductVariant(null);
+    setProductSearchTerm("");
   };
 
   const handleRemoveOrderItem = (itemId: string) => {
@@ -57,6 +178,7 @@ const CreateOrderModal = ({ isOpen, onClose, onSave }: CreateOrderModalProps) =>
     onSave(formData);
     // Reset form
     setFormData({
+      customerId: "",
       customerName: "",
       customerAddress: "",
       customerEmail: "",
@@ -65,6 +187,11 @@ const CreateOrderModal = ({ isOpen, onClose, onSave }: CreateOrderModalProps) =>
       orderItems: [{ id: "1", name: "", quantity: 1 }],
       notes: ""
     });
+    setCustomerSearchTerm("");
+    setProductSearchTerm("");
+    setShowCustomerSuggestions(false);
+    setShowProductSuggestions(false);
+    setSelectedProductVariant(null);
   };
 
   return (
@@ -100,80 +227,174 @@ const CreateOrderModal = ({ isOpen, onClose, onSave }: CreateOrderModalProps) =>
 
         <div className="p-4 sm:p-6 space-y-6">
           {/* Customer Information */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                Customer Name *
-              </label>
-              <input
-                type="text"
-                value={formData.customerName}
-                onChange={(e) =>
-                  setFormData({ ...formData, customerName: e.target.value })
-                }
-                className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                placeholder="Enter customer name"
-              />
+          <div>
+            <h3 className="text-sm sm:text-base font-medium text-[#1F1F1F] mb-3 sm:mb-4">Customer Information</h3>
+            <div className="space-y-4">
+              {/* Customer Search */}
+              <div className="relative customer-search">
+                <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+                  Search Customer *
+                </label>
+                <input
+                  type="text"
+                  value={customerSearchTerm}
+                  onChange={(e) => {
+                    setCustomerSearchTerm(e.target.value);
+                    setShowCustomerSuggestions(true);
+                  }}
+                  onFocus={() => setShowCustomerSuggestions(true)}
+                  className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+                  placeholder="Search by shop name, owner name, or phone..."
+                />
+                
+                {/* Customer Suggestions */}
+                {showCustomerSuggestions && filteredCustomers.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-[#DDDDDD] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredCustomers.map((customer) => (
+                      <div
+                        key={customer.id}
+                        onClick={() => handleCustomerSelect(customer)}
+                        className="px-3 py-2 hover:bg-[#F7F3FF] cursor-pointer border-b border-[#DDDDDD] last:border-b-0"
+                      >
+                        <div className="font-medium text-[#1F1F1F]">{customer.shopName}</div>
+                        <div className="text-sm text-[#666666]">
+                          {customer.ownerName} • {customer.ownerPhone}
+                        </div>
+                        <div className="text-xs text-[#666666]">
+                          {customer.area}, {customer.city}, {customer.state}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Selected Customer Details */}
+              {formData.customerId && (
+                <div className="bg-[#F7F3FF] p-3 rounded-lg">
+                  <div className="text-sm">
+                    <div className="font-medium text-[#1F1F1F]">{formData.customerName}</div>
+                    <div className="text-[#666666]">{formData.customerAddress}</div>
+                    <div className="text-[#666666]">{formData.customerEmail} • {formData.customerPhone}</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.customerEmail}
+                    onChange={(e) =>
+                      setFormData({ ...formData, customerEmail: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+                    placeholder="Enter email address"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.customerPhone}
+                    onChange={(e) =>
+                      setFormData({ ...formData, customerPhone: e.target.value })
+                    }
+                    className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+                    placeholder="Enter phone number"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                Customer Address *
-              </label>
-              <textarea
-                value={formData.customerAddress}
-                onChange={(e) =>
-                  setFormData({ ...formData, customerAddress: e.target.value })
-                }
-                className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                placeholder="Enter customer address"
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={formData.customerEmail}
-                onChange={(e) =>
-                  setFormData({ ...formData, customerEmail: e.target.value })
-                }
-                className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                placeholder="Enter email address"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                Phone
-              </label>
-              <input
-                type="tel"
-                value={formData.customerPhone}
-                onChange={(e) =>
-                  setFormData({ ...formData, customerPhone: e.target.value })
-                }
-                className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                placeholder="Enter phone number"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                Status
-              </label>
-              <select
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value as any })
-                }
-                className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-              >
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+          </div>
+
+          {/* Order Status */}
+          <div>
+            <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value as any })
+              }
+              className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+            >
+              <option value="pending">Pending</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          {/* Product Search and Selection */}
+          <div>
+            <h3 className="text-sm sm:text-base font-medium text-[#1F1F1F] mb-3 sm:mb-4">Product Selection</h3>
+            <div className="space-y-4">
+              {/* Product Search */}
+              <div className="relative product-search">
+                <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+                  Search Products
+                </label>
+                <input
+                  type="text"
+                  value={productSearchTerm}
+                  onChange={(e) => {
+                    setProductSearchTerm(e.target.value);
+                    setShowProductSuggestions(true);
+                  }}
+                  onFocus={() => setShowProductSuggestions(true)}
+                  className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+                  placeholder="Search products by name..."
+                />
+                
+                {/* Product Suggestions */}
+                {showProductSuggestions && filteredProducts.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-[#DDDDDD] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                    {filteredProducts.map((product) => (
+                      <div key={product.id} className="border-b border-[#DDDDDD] last:border-b-0">
+                        <div className="px-3 py-2 font-medium text-[#1F1F1F] bg-[#F7F3FF]">
+                          {product.name} - {getCompanyName(product.companyId)} - {getCategoryName(product.categoryId)}
+                        </div>
+                        {product.variants.map((variant) => (
+                          <div
+                            key={variant.id}
+                            onClick={() => handleProductSelect(product, variant)}
+                            className="px-3 py-2 hover:bg-[#F7F3FF] cursor-pointer border-t border-[#DDDDDD]"
+                          >
+                            <div className="text-sm text-[#1F1F1F]">{variant.name}</div>
+                            <div className="text-xs text-[#666666]">₹{variant.mrp}</div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Selected Product */}
+              {selectedProductVariant && (
+                <div className="bg-[#F7F3FF] p-3 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm">
+                      <div className="font-medium text-[#1F1F1F]">{selectedProductVariant.name}</div>
+                      <div className="text-[#666666]">₹{selectedProductVariant.mrp}</div>
+                    </div>
+                    <button
+                      onClick={handleAddSelectedProduct}
+                      className="px-3 py-1 bg-[#9869E0] text-white text-sm rounded-lg hover:bg-[#7B40CC] transition-colors"
+                    >
+                      Add to Order
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
