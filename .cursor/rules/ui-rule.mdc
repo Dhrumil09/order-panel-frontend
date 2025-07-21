@@ -1,0 +1,44 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Follow current theme of app. 
+
+- always make sure to develop morden UI with easy UX.
+- always make UI responsive
+- follow below theme
+ 
+1. Lighter Shades (for backgrounds, subtle elements)
+#D4C4F0 – very light lavender
+
+#EAE2FA – almost white purple
+
+#F7F3FF – faint tint, great for hover background
+
+2. Darker Shades (for buttons, hover, focus)
+#9869E0 – darker purple
+
+#7B40CC – deep violet (for hover states or emphasis)
+
+#5E2BA8 – for text accents, selected icons
+
+3. Accent Colors (for alerts, links, status)
+Success (green): #4BB543
+
+Warning (amber): #FFB946
+
+Error (red): #E74C3C
+
+Info (blue): #4D8BF5
+
+4. Neutral Colors (for text, background, borders)
+Text primary: #1F1F1F
+
+Text secondary: #666666
+
+Border: #DDDDDD
+
+Background: #F9F9F9
+
+White: #FFFFFF

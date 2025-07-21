@@ -1,0 +1,70 @@
+{
+  "layout": {
+    "type": "split_screen",
+    "left_panel": {
+      "type": "form_section",
+      "logo": {
+        "src": "logo.png",
+        "alt": "TheCubeFactory",
+        "position": "top-left"
+      },
+      "heading": "Welcome back",
+      "subheading": "Please enter your details",
+      "fields": [
+        {
+          "type": "text",
+          "label": "Email address",
+          "name": "email"
+        },
+        {
+          "type": "password",
+          "label": "Password",
+          "name": "password"
+        }
+      ],
+      "options": {
+        "remember_me": {
+          "type": "checkbox",
+          "label": "Remember for 30 days"
+        },
+        "forgot_password": {
+          "type": "link",
+          "text": "Forgot password",
+          "href": "/forgot-password"
+        }
+      },
+      "actions": [
+        {
+          "type": "button",
+          "text": "Sign in",
+          "variant": "primary"
+        },
+        {
+          "type": "button",
+          "text": "Sign in with Google",
+          "variant": "outline",
+          "icon": "google"
+        }
+      ],
+      "footer": {
+        "text": "Don't have an account?",
+        "link": {
+          "text": "Sign up",
+          "href": "/signup"
+        }
+      }
+    },
+    "right_panel": {
+      "type": "illustration_section",
+      "background_color": "#B494E5",
+      "illustration": {
+        "type": "flat_vector",
+        "elements": [
+          "woman inside screen",
+          "ok hand gesture",
+          "technology icons (email, headset, globe, etc.)"
+        ]
+      }
+    }
+  }
+}
