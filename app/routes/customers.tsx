@@ -9,11 +9,11 @@ import CustomersFilters from "~/components/customers/CustomersFilters";
 import Pagination from "~/components/customers/Pagination";
 import type { Customer, CreateCustomerFormData } from "~/types/customers";
 import { statusColors, statusLabels } from "~/types/customers";
-import { 
-  useCustomers, 
-  useCreateCustomer, 
-  useDeleteCustomer, 
-  useLocations 
+import {
+  useCustomers,
+  useCreateCustomer,
+  useDeleteCustomer,
+  useLocations,
 } from "~/hooks/useCustomers";
 import type { CustomerQueryParams } from "../../api-types";
 
@@ -29,16 +29,24 @@ export default function Customers() {
   const [areaFilter, setAreaFilter] = useState<string[]>([]);
   const [cityFilter, setCityFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<"shopName" | "ownerName" | "registrationDate" | "totalOrders">("registrationDate");
+  const [sortBy, setSortBy] = useState<
+    "shopName" | "ownerName" | "registrationDate" | "totalOrders"
+  >("registrationDate");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
+    null
+  );
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
-  const [manageTab, setManageTab] = useState<"states" | "cities" | "areas">("states");
+  const [manageTab, setManageTab] = useState<"states" | "cities" | "areas">(
+    "states"
+  );
   const [newStateName, setNewStateName] = useState("");
   const [newCityName, setNewCityName] = useState("");
   const [newAreaName, setNewAreaName] = useState("");
@@ -78,7 +86,15 @@ export default function Customers() {
     }
 
     return params;
-  }, [currentPage, searchTerm, statusFilter, areaFilter, cityFilter, sortBy, sortOrder]);
+  }, [
+    currentPage,
+    searchTerm,
+    statusFilter,
+    areaFilter,
+    cityFilter,
+    sortBy,
+    sortOrder,
+  ]);
 
   // Fetch customers data
   const { data: customersData, isLoading, error } = useCustomers(queryParams);
@@ -86,14 +102,15 @@ export default function Customers() {
   // Hierarchical location data structure
   const [locationData, setLocationData] = useState(() => {
     // Initialize with data from API locations
-    const states: { [key: string]: { cities: { [key: string]: string[] } } } = {};
-    
+    const states: { [key: string]: { cities: { [key: string]: string[] } } } =
+      {};
+
     // Add Gujarat and Ahmedabad as default
-    states["Gujarat"] = { 
+    states["Gujarat"] = {
       cities: {
-        "Ahmedabad": [
+        Ahmedabad: [
           "Satellite",
-          "Vastrapur", 
+          "Vastrapur",
           "Navrangpura",
           "Paldi",
           "Ellisbridge",
@@ -101,26 +118,28 @@ export default function Customers() {
           "Stadium Road",
           "Law Garden",
           "Bodakdev",
-          "Thaltej"
-        ]
-      }
+          "Thaltej",
+        ],
+      },
     };
-    
+
     return states;
   });
 
   // Update location data when API data is available
   useEffect(() => {
     if (locationsData?.states) {
-      const newLocationData: { [key: string]: { cities: { [key: string]: string[] } } } = {};
-      
-      locationsData.states.forEach(state => {
+      const newLocationData: {
+        [key: string]: { cities: { [key: string]: string[] } };
+      } = {};
+
+      locationsData.states.forEach((state) => {
         newLocationData[state.name] = { cities: {} };
-        state.cities.forEach(city => {
+        state.cities.forEach((city) => {
           newLocationData[state.name].cities[city.name] = city.areas;
         });
       });
-      
+
       setLocationData(newLocationData);
     }
   }, [locationsData]);
@@ -128,8 +147,8 @@ export default function Customers() {
   // Get unique areas and cities for filters (flattened for backward compatibility)
   const availableAreas = useMemo(() => {
     const areas: string[] = [];
-    Object.values(locationData).forEach(stateData => {
-      Object.values(stateData.cities).forEach(cityAreas => {
+    Object.values(locationData).forEach((stateData) => {
+      Object.values(stateData.cities).forEach((cityAreas) => {
         areas.push(...cityAreas);
       });
     });
@@ -138,7 +157,7 @@ export default function Customers() {
 
   const availableCities = useMemo(() => {
     const cities: string[] = [];
-    Object.values(locationData).forEach(stateData => {
+    Object.values(locationData).forEach((stateData) => {
       cities.push(...Object.keys(stateData.cities));
     });
     return [...new Set(cities)].sort();
@@ -148,46 +167,14 @@ export default function Customers() {
     return Object.keys(locationData).sort();
   }, [locationData]);
 
-  // Get customers data from API
-  const customers = customersData?.customers || [];
-  const pagination = customersData?.pagination;
-
-  // Loading and error states
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9869E0] mx-auto mb-4"></div>
-            <p className="text-[#666666]">Loading customers...</p>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">Error loading customers</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="px-4 py-2 bg-[#9869E0] text-white rounded-lg hover:bg-[#7B40CC]"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, areaFilter, cityFilter, sortBy, sortOrder]);
+
+  // Get customers data from API
+  const customers = customersData?.customers || [];
+  const pagination = customersData?.pagination;
 
   const clearAllFilters = () => {
     setSearchTerm("");
@@ -201,7 +188,7 @@ export default function Customers() {
     searchTerm,
     statusFilter.length > 0,
     areaFilter.length > 0,
-    cityFilter.length > 0
+    cityFilter.length > 0,
   ].filter(Boolean).length;
 
   const handleCustomerClick = (customer: Customer) => {
@@ -249,7 +236,7 @@ export default function Customers() {
       state: formData.state,
       pincode: formData.pincode,
       status: formData.status,
-      notes: formData.notes
+      notes: formData.notes,
     });
     setIsCreateModalOpen(false);
   };
@@ -258,16 +245,16 @@ export default function Customers() {
   const handleAddState = () => {
     if (newStateName.trim() && !availableStates.includes(newStateName.trim())) {
       const newState = newStateName.trim();
-      setLocationData(prev => ({
+      setLocationData((prev) => ({
         ...prev,
-        [newState]: { cities: {} }
+        [newState]: { cities: {} },
       }));
       setNewStateName("");
     }
   };
 
   const handleDeleteState = (stateName: string) => {
-    setLocationData(prev => {
+    setLocationData((prev) => {
       const newData = { ...prev };
       delete newData[stateName];
       return newData;
@@ -276,17 +263,21 @@ export default function Customers() {
 
   // City management functions
   const handleAddCity = () => {
-    if (newCityName.trim() && selectedState && !locationData[selectedState]?.cities[newCityName.trim()]) {
+    if (
+      newCityName.trim() &&
+      selectedState &&
+      !locationData[selectedState]?.cities[newCityName.trim()]
+    ) {
       const newCity = newCityName.trim();
-      setLocationData(prev => ({
+      setLocationData((prev) => ({
         ...prev,
         [selectedState]: {
           ...prev[selectedState],
           cities: {
             ...prev[selectedState].cities,
-            [newCity]: []
-          }
-        }
+            [newCity]: [],
+          },
+        },
       }));
       setNewCityName("");
     }
@@ -294,7 +285,7 @@ export default function Customers() {
 
   const handleDeleteCity = (cityName: string) => {
     if (selectedState) {
-      setLocationData(prev => {
+      setLocationData((prev) => {
         const newData = { ...prev };
         delete newData[selectedState].cities[cityName];
         return newData;
@@ -304,18 +295,27 @@ export default function Customers() {
 
   // Area management functions
   const handleAddArea = () => {
-    if (newAreaName.trim() && selectedState && selectedCity && 
-        !locationData[selectedState]?.cities[selectedCity]?.includes(newAreaName.trim())) {
+    if (
+      newAreaName.trim() &&
+      selectedState &&
+      selectedCity &&
+      !locationData[selectedState]?.cities[selectedCity]?.includes(
+        newAreaName.trim()
+      )
+    ) {
       const newArea = newAreaName.trim();
-      setLocationData(prev => ({
+      setLocationData((prev) => ({
         ...prev,
         [selectedState]: {
           ...prev[selectedState],
           cities: {
             ...prev[selectedState].cities,
-            [selectedCity]: [...(prev[selectedState].cities[selectedCity] || []), newArea].sort()
-          }
-        }
+            [selectedCity]: [
+              ...(prev[selectedState].cities[selectedCity] || []),
+              newArea,
+            ].sort(),
+          },
+        },
       }));
       setNewAreaName("");
     }
@@ -323,18 +323,52 @@ export default function Customers() {
 
   const handleDeleteArea = (areaName: string) => {
     if (selectedState && selectedCity) {
-      setLocationData(prev => ({
+      setLocationData((prev) => ({
         ...prev,
         [selectedState]: {
           ...prev[selectedState],
           cities: {
             ...prev[selectedState].cities,
-            [selectedCity]: prev[selectedState].cities[selectedCity].filter(area => area !== areaName)
-          }
-        }
+            [selectedCity]: prev[selectedState].cities[selectedCity].filter(
+              (area) => area !== areaName
+            ),
+          },
+        },
       }));
     }
   };
+
+  // Loading and error states
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9869E0] mx-auto mb-4"></div>
+            <p className="text-[#666666]">Loading customers...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading customers</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#9869E0] text-white rounded-lg hover:bg-[#7B40CC]"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -397,7 +431,7 @@ export default function Customers() {
         statusFilter={statusFilter}
         onStatusFilterChange={(status) => {
           if (statusFilter.includes(status)) {
-            setStatusFilter(statusFilter.filter(s => s !== status));
+            setStatusFilter(statusFilter.filter((s) => s !== status));
           } else {
             setStatusFilter([...statusFilter, status]);
           }
@@ -405,7 +439,7 @@ export default function Customers() {
         areaFilter={areaFilter}
         onAreaFilterChange={(area) => {
           if (areaFilter.includes(area)) {
-            setAreaFilter(areaFilter.filter(a => a !== area));
+            setAreaFilter(areaFilter.filter((a) => a !== area));
           } else {
             setAreaFilter([...areaFilter, area]);
           }
@@ -413,7 +447,7 @@ export default function Customers() {
         cityFilter={cityFilter}
         onCityFilterChange={(city) => {
           if (cityFilter.includes(city)) {
-            setCityFilter(cityFilter.filter(c => c !== city));
+            setCityFilter(cityFilter.filter((c) => c !== city));
           } else {
             setCityFilter([...cityFilter, city]);
           }
@@ -452,7 +486,10 @@ export default function Customers() {
             currentPage={pagination.currentPage}
             totalPages={pagination.totalPages}
             startIndex={(pagination.currentPage - 1) * pagination.itemsPerPage}
-            endIndex={Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}
+            endIndex={Math.min(
+              pagination.currentPage * pagination.itemsPerPage,
+              pagination.totalItems
+            )}
             totalItems={pagination.totalItems}
             onPageChange={setCurrentPage}
           />
@@ -468,9 +505,9 @@ export default function Customers() {
       />
 
       {/* Customer Details Modal */}
-      <CustomerDetailsModal 
-        customer={selectedCustomer} 
-        isOpen={isModalOpen} 
+      <CustomerDetailsModal
+        customer={selectedCustomer}
+        isOpen={isModalOpen}
         onClose={handleCloseModal}
         statusColors={statusColors}
         statusLabels={statusLabels}
@@ -596,7 +633,11 @@ export default function Customers() {
                               {state}
                             </span>
                             <div className="text-xs text-[#666666] mt-1">
-                              {Object.keys(locationData[state]?.cities || {}).length} cities
+                              {
+                                Object.keys(locationData[state]?.cities || {})
+                                  .length
+                              }{" "}
+                              cities
                             </div>
                           </div>
                           <button
@@ -678,10 +719,18 @@ export default function Customers() {
                       {/* Cities List */}
                       <div>
                         <h3 className="text-sm font-medium text-[#1F1F1F] mb-3">
-                          Cities in {selectedState} ({Object.keys(locationData[selectedState]?.cities || {}).length})
+                          Cities in {selectedState} (
+                          {
+                            Object.keys(
+                              locationData[selectedState]?.cities || {}
+                            ).length
+                          }
+                          )
                         </h3>
                         <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {Object.keys(locationData[selectedState]?.cities || {}).map((city) => (
+                          {Object.keys(
+                            locationData[selectedState]?.cities || {}
+                          ).map((city) => (
                             <div
                               key={city}
                               className="flex items-center justify-between rounded-lg border border-[#DDDDDD] p-3"
@@ -691,7 +740,11 @@ export default function Customers() {
                                   {city}
                                 </span>
                                 <div className="text-xs text-[#666666] mt-1">
-                                  {locationData[selectedState].cities[city].length} areas
+                                  {
+                                    locationData[selectedState].cities[city]
+                                      .length
+                                  }{" "}
+                                  areas
                                 </div>
                               </div>
                               <button
@@ -756,11 +809,14 @@ export default function Customers() {
                         className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20 disabled:opacity-50"
                       >
                         <option value="">Select a city</option>
-                        {selectedState && Object.keys(locationData[selectedState]?.cities || {}).map((city) => (
-                          <option key={city} value={city}>
-                            {city}
-                          </option>
-                        ))}
+                        {selectedState &&
+                          Object.keys(
+                            locationData[selectedState]?.cities || {}
+                          ).map((city) => (
+                            <option key={city} value={city}>
+                              {city}
+                            </option>
+                          ))}
                       </select>
                     </div>
                   </div>
@@ -795,10 +851,15 @@ export default function Customers() {
                       {/* Areas List */}
                       <div>
                         <h3 className="text-sm font-medium text-[#1F1F1F] mb-3">
-                          Areas in {selectedCity}, {selectedState} ({locationData[selectedState]?.cities[selectedCity]?.length || 0})
+                          Areas in {selectedCity}, {selectedState} (
+                          {locationData[selectedState]?.cities[selectedCity]
+                            ?.length || 0}
+                          )
                         </h3>
                         <div className="space-y-2 max-h-64 overflow-y-auto">
-                          {locationData[selectedState]?.cities[selectedCity]?.map((area) => (
+                          {locationData[selectedState]?.cities[
+                            selectedCity
+                          ]?.map((area) => (
                             <div
                               key={area}
                               className="flex items-center justify-between rounded-lg border border-[#DDDDDD] p-3"

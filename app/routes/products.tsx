@@ -1,16 +1,34 @@
 import { useState } from "react";
 import AdminLayout from "~/components/AdminLayout";
 import { createPageMeta } from "~/utils/meta";
-import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from "~/hooks/useProducts";
-import { useCompanies, useCreateCompany, useDeleteCompany } from "~/hooks/useCompanies";
-import { useCategories, useCreateCategory, useDeleteCategory } from "~/hooks/useCategories";
+import {
+  useProducts,
+  useCreateProduct,
+  useUpdateProduct,
+  useDeleteProduct,
+} from "~/hooks/useProducts";
+import {
+  useCompanies,
+  useCreateCompany,
+  useDeleteCompany,
+} from "~/hooks/useCompanies";
+import {
+  useCategories,
+  useCreateCategory,
+  useDeleteCategory,
+} from "~/hooks/useCategories";
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from "../../api-types";
 
 export function meta() {
   return createPageMeta("Products", "Manage products.");
 }
 
-import type { Product, Company, Category, ProductVariant } from "../../api-types";
+import type {
+  Product,
+  Company,
+  Category,
+  ProductVariant,
+} from "../../api-types";
 
 interface Filters {
   selectedCompanies: string[];
@@ -35,10 +53,12 @@ const initialFormData = {
   packSize: 1,
 };
 
+const MAX_PRICE = 100000;
+
 const initialFilters: Filters = {
   selectedCompanies: [],
   selectedCategories: [],
-  priceRange: { min: 0, max: 1000 },
+  priceRange: { min: 0, max: MAX_PRICE },
   stockStatus: "all",
   sizeFilter: "",
   availability: "all",
@@ -52,19 +72,30 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [showFilters, setShowFilters] = useState(false);
-  const [manageTab, setManageTab] = useState<"companies" | "categories">("companies");
+  const [manageTab, setManageTab] = useState<"companies" | "categories">(
+    "companies"
+  );
   const [newCompanyName, setNewCompanyName] = useState("");
   const [newCategoryName, setNewCategoryName] = useState("");
 
   // API hooks
   const { data: productsData, isLoading: productsLoading } = useProducts({
     search: searchTerm || undefined,
-    companyId: filters.selectedCompanies.length > 0 ? filters.selectedCompanies : undefined,
-    categoryId: filters.selectedCategories.length > 0 ? filters.selectedCategories : undefined,
-    stockStatus: filters.stockStatus !== "all" ? filters.stockStatus : undefined,
-    availability: filters.availability !== "all" ? filters.availability : undefined,
+    companyId:
+      filters.selectedCompanies.length > 0
+        ? filters.selectedCompanies
+        : undefined,
+    categoryId:
+      filters.selectedCategories.length > 0
+        ? filters.selectedCategories
+        : undefined,
+    stockStatus:
+      filters.stockStatus !== "all" ? filters.stockStatus : undefined,
+    availability:
+      filters.availability !== "all" ? filters.availability : undefined,
     minPrice: filters.priceRange.min > 0 ? filters.priceRange.min : undefined,
-    maxPrice: filters.priceRange.max < 1000 ? filters.priceRange.max : undefined,
+    maxPrice:
+      filters.priceRange.max < MAX_PRICE ? filters.priceRange.max : undefined,
     sizeFilter: filters.sizeFilter || undefined,
   });
 
@@ -133,7 +164,10 @@ export default function Products() {
 
     try {
       if (editingProduct) {
-        await updateProductMutation.mutateAsync({ id: editingProduct.id, data: productData });
+        await updateProductMutation.mutateAsync({
+          id: editingProduct.id,
+          data: productData,
+        });
       } else {
         await createProductMutation.mutateAsync(productData);
       }
@@ -184,7 +218,9 @@ export default function Products() {
   const handleAddCompany = async () => {
     if (newCompanyName.trim()) {
       try {
-        await createCompanyMutation.mutateAsync({ name: newCompanyName.trim() });
+        await createCompanyMutation.mutateAsync({
+          name: newCompanyName.trim(),
+        });
         setNewCompanyName("");
       } catch (error) {
         // Error handling is done in the mutation
@@ -204,7 +240,9 @@ export default function Products() {
   const handleAddCategory = async () => {
     if (newCategoryName.trim()) {
       try {
-        await createCategoryMutation.mutateAsync({ name: newCategoryName.trim() });
+        await createCategoryMutation.mutateAsync({
+          name: newCategoryName.trim(),
+        });
         setNewCategoryName("");
       } catch (error) {
         // Error handling is done in the mutation
@@ -249,7 +287,8 @@ export default function Products() {
     if (filters.stockStatus !== "all") count++;
     if (filters.sizeFilter) count++;
     if (filters.availability !== "all") count++;
-    if (filters.priceRange.min > 0 || filters.priceRange.max < 1000) count++;
+    if (filters.priceRange.min > 0 || filters.priceRange.max < MAX_PRICE)
+      count++;
     return count;
   };
 
@@ -373,441 +412,356 @@ export default function Products() {
         </div>
       </div>
 
-          {/* Search bar */}
-          <div className="mb-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-lg border border-[#DDDDDD] bg-white px-4 py-3 pl-10 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-              />
-              <svg
-                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666666]"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+      {/* Search bar */}
+      <div className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded-lg border border-[#DDDDDD] bg-white px-4 py-3 pl-10 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+          />
+          <svg
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#666666]"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+      </div>
+
+      {/* Company Filter Buttons */}
+      <div className="mb-4">
+        <div className="flex flex-wrap gap-2">
+          {companies.map((company) => (
+            <button
+              key={company.id}
+              onClick={() => handleCompanyFilter(company.id)}
+              className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                filters.selectedCompanies.includes(company.id)
+                  ? "bg-[#9869E0] text-white"
+                  : "bg-white border border-[#DDDDDD] text-[#666666] hover:bg-[#F7F3FF] hover:border-[#9869E0]"
+              } focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20`}
+            >
+              {company.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Filters Section */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="inline-flex items-center gap-2 rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm font-medium text-[#666666] transition-colors hover:bg-[#F7F3FF] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
+            </svg>
+            Filters
+            {getActiveFilterCount() > 0 && (
+              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-[#9869E0] text-xs font-medium text-white">
+                {getActiveFilterCount()}
+              </span>
+            )}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-transform ${
+                showFilters ? "rotate-180" : ""
+              }`}
+            >
+              <polyline points="6,9 12,15 18,9"></polyline>
+            </svg>
+          </button>
+          {getActiveFilterCount() > 0 && (
+            <button
+              onClick={clearAllFilters}
+              className="text-sm text-[#9869E0] hover:text-[#7B40CC] focus:outline-none"
+            >
+              Clear all filters
+            </button>
+          )}
+        </div>
+
+        {showFilters && (
+          <div className="rounded-lg border border-[#DDDDDD] bg-white p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Category Filter */}
+              <div>
+                <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+                  Categories
+                </label>
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <label key={category.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.selectedCategories.includes(
+                          category.id
+                        )}
+                        onChange={() => handleCategoryFilter(category.id)}
+                        className="rounded border-[#DDDDDD] text-[#9869E0] focus:ring-[#9869E0]"
+                      />
+                      <span className="ml-2 text-sm text-[#666666]">
+                        {category.name}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stock Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+                  Stock Status
+                </label>
+                <select
+                  value={filters.stockStatus}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      stockStatus: e.target.value as any,
+                    }))
+                  }
+                  className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+                >
+                  <option value="all">All Status</option>
+                  <option value="in-stock">In Stock</option>
+                  <option value="out-of-stock">Out of Stock</option>
+                </select>
+              </div>
+
+              {/* Availability Filter */}
+              <div>
+                <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+                  Availability
+                </label>
+                <select
+                  value={filters.availability}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      availability: e.target.value as any,
+                    }))
+                  }
+                  className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+                >
+                  <option value="all">All Types</option>
+                  <option value="pieces">Pieces Only</option>
+                  <option value="pack">Pack Only</option>
+                  <option value="both">Both</option>
+                </select>
+              </div>
+
+              {/* Price Range Filter */}
+              <div>
+                <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+                  Price Range (₹)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={filters.priceRange.min}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        priceRange: {
+                          ...prev.priceRange,
+                          min: parseInt(e.target.value) || 0,
+                        },
+                      }))
+                    }
+                    className="flex-1 rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={filters.priceRange.max}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        priceRange: {
+                          ...prev.priceRange,
+                          max: parseInt(e.target.value) || MAX_PRICE,
+                        },
+                      }))
+                    }
+                    className="flex-1 rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+                  />
+                </div>
+              </div>
+
+              {/* Size Filter */}
+              <div>
+                <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
+                  Size Contains
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 250g, Large"
+                  value={filters.sizeFilter}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      sizeFilter: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
                 />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Results Summary */}
+      <div className="mb-4 flex items-center justify-between">
+        <p className="text-sm text-[#666666]">
+          Showing {filteredProducts.length} of {products.length} products
+        </p>
+      </div>
+
+      {/* Products list */}
+      <div className="rounded-xl border border-[#DDDDDD] bg-white">
+        {filteredProducts.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-[#EAE2FA] flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-[#9869E0]"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="9" cy="9" r="2"></circle>
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
               </svg>
             </div>
-          </div>
-
-          {/* Company Filter Buttons */}
-          <div className="mb-4">
-            <div className="flex flex-wrap gap-2">
-              {companies.map((company) => (
-                <button
-                  key={company.id}
-                  onClick={() => handleCompanyFilter(company.id)}
-                  className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-                    filters.selectedCompanies.includes(company.id)
-                      ? "bg-[#9869E0] text-white"
-                      : "bg-white border border-[#DDDDDD] text-[#666666] hover:bg-[#F7F3FF] hover:border-[#9869E0]"
-                  } focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20`}
-                >
-                  {company.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Filters Section */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="inline-flex items-center gap-2 rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm font-medium text-[#666666] transition-colors hover:bg-[#F7F3FF] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"></polygon>
-                </svg>
-                Filters
-                {getActiveFilterCount() > 0 && (
-                  <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-[#9869E0] text-xs font-medium text-white">
-                    {getActiveFilterCount()}
-                  </span>
-                )}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={`transition-transform ${
-                    showFilters ? "rotate-180" : ""
-                  }`}
-                >
-                  <polyline points="6,9 12,15 18,9"></polyline>
-                </svg>
-              </button>
-              {getActiveFilterCount() > 0 && (
-                <button
-                  onClick={clearAllFilters}
-                  className="text-sm text-[#9869E0] hover:text-[#7B40CC] focus:outline-none"
-                >
-                  Clear all filters
-                </button>
-              )}
-            </div>
-
-            {showFilters && (
-              <div className="rounded-lg border border-[#DDDDDD] bg-white p-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Category Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                      Categories
-                    </label>
-                    <div className="space-y-2">
-                      {categories.map((category) => (
-                        <label key={category.id} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={filters.selectedCategories.includes(
-                              category.id
-                            )}
-                            onChange={() => handleCategoryFilter(category.id)}
-                            className="rounded border-[#DDDDDD] text-[#9869E0] focus:ring-[#9869E0]"
-                          />
-                          <span className="ml-2 text-sm text-[#666666]">
-                            {category.name}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Stock Status Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                      Stock Status
-                    </label>
-                    <select
-                      value={filters.stockStatus}
-                      onChange={(e) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          stockStatus: e.target.value as any,
-                        }))
-                      }
-                      className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                    >
-                      <option value="all">All Status</option>
-                      <option value="in-stock">In Stock</option>
-                      <option value="out-of-stock">Out of Stock</option>
-                    </select>
-                  </div>
-
-                  {/* Availability Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                      Availability
-                    </label>
-                    <select
-                      value={filters.availability}
-                      onChange={(e) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          availability: e.target.value as any,
-                        }))
-                      }
-                      className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                    >
-                      <option value="all">All Types</option>
-                      <option value="pieces">Pieces Only</option>
-                      <option value="pack">Pack Only</option>
-                      <option value="both">Both</option>
-                    </select>
-                  </div>
-
-                  {/* Price Range Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                      Price Range (₹)
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        placeholder="Min"
-                        value={filters.priceRange.min}
-                        onChange={(e) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            priceRange: {
-                              ...prev.priceRange,
-                              min: parseInt(e.target.value) || 0,
-                            },
-                          }))
-                        }
-                        className="flex-1 rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Max"
-                        value={filters.priceRange.max}
-                        onChange={(e) =>
-                          setFilters((prev) => ({
-                            ...prev,
-                            priceRange: {
-                              ...prev.priceRange,
-                              max: parseInt(e.target.value) || 1000,
-                            },
-                          }))
-                        }
-                        className="flex-1 rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Size Filter */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#1F1F1F] mb-2">
-                      Size Contains
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 250g, Large"
-                      value={filters.sizeFilter}
-                      onChange={(e) =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          sizeFilter: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-lg border border-[#DDDDDD] bg-white px-3 py-2 text-sm text-[#1F1F1F] placeholder-[#666666] focus:border-[#9869E0] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Results Summary */}
-          <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-[#666666]">
-              Showing {filteredProducts.length} of {products.length} products
+              {searchTerm || getActiveFilterCount() > 0
+                ? "No products found matching your search criteria."
+                : "No products added yet. Create your first product!"}
             </p>
           </div>
-
-          {/* Products list */}
-          <div className="rounded-xl border border-[#DDDDDD] bg-white">
-            {filteredProducts.length === 0 ? (
-              <div className="p-8 text-center">
-                <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-[#EAE2FA] flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-[#9869E0]"
-                  >
-                    <rect
-                      x="3"
-                      y="3"
-                      width="18"
-                      height="18"
-                      rx="2"
-                      ry="2"
-                    ></rect>
-                    <circle cx="9" cy="9" r="2"></circle>
-                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-                  </svg>
-                </div>
-                <p className="text-sm text-[#666666]">
-                  {searchTerm || getActiveFilterCount() > 0
-                    ? "No products found matching your search criteria."
-                    : "No products added yet. Create your first product!"}
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table View */}
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="border-b border-[#DDDDDD]">
-                      <tr>
-                        <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
-                          Product
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
-                          Company
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
-                          Category
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
-                          Variants
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
-                          Status
-                        </th>
-                        <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
-                          Availability
-                        </th>
-                        <th className="px-6 py-4 text-right text-sm font-medium text-[#666666]">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredProducts.map((product, index) => (
-                        <tr
-                          key={product.id}
-                          className={`${
-                            index !== filteredProducts.length - 1
-                              ? "border-b border-[#DDDDDD]"
-                              : ""
-                          } hover:bg-[#F7F3FF]`}
-                        >
-                          <td className="px-6 py-4">
-                            <div className="font-medium text-[#1F1F1F]">
-                              {product.name}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-[#666666]">
-                            {getCompanyName(product.companyId)}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-[#666666]">
-                            {getCategoryName(product.categoryId)}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-wrap gap-1">
-                              {product.variants.map((variant) => (
-                                <span
-                                  key={variant.id}
-                                  className="inline-flex items-center rounded-full bg-[#EAE2FA] px-2 py-1 text-xs font-medium text-[#5E2BA8]"
-                                >
-                                  {variant.name} - ₹{variant.mrp}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span
-                              className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                product.isOutOfStock
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-green-100 text-green-800"
-                              }`}
-                            >
-                              {product.isOutOfStock
-                                ? "Out of Stock"
-                                : "In Stock"}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col gap-1 text-xs text-[#666666]">
-                              {product.availableInPieces && (
-                                <span>✓ Pieces</span>
-                              )}
-                              {product.availableInPack && (
-                                <span>✓ Pack of {product.packSize}</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-2">
-                              <button
-                                onClick={() => handleEditProduct(product)}
-                                className="rounded-lg p-2 text-[#666666] hover:bg-[#EAE2FA] hover:text-[#5E2BA8] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
-                                aria-label="Edit product"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => handleDeleteProduct(product.id)}
-                                className="rounded-lg p-2 text-[#666666] hover:bg-red-100 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/20"
-                                aria-label="Delete product"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                >
-                                  <polyline points="3,6 5,6 21,6"></polyline>
-                                  <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
-                                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                                </svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Card View */}
-                <div className="md:hidden">
+        ) : (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-[#DDDDDD]">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
+                      Product
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
+                      Company
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
+                      Category
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
+                      Variants
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-[#666666]">
+                      Availability
+                    </th>
+                    <th className="px-6 py-4 text-right text-sm font-medium text-[#666666]">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
                   {filteredProducts.map((product, index) => (
-                    <div
+                    <tr
                       key={product.id}
-                      className={`p-4 ${
+                      className={`${
                         index !== filteredProducts.length - 1
                           ? "border-b border-[#DDDDDD]"
                           : ""
-                      }`}
+                      } hover:bg-[#F7F3FF]`}
                     >
-                      {/* Product Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-[#1F1F1F] truncate">
-                            {product.name}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-1 text-sm text-[#666666]">
-                            <span>{getCompanyName(product.companyId)}</span>
-                            <span>•</span>
-                            <span>{getCategoryName(product.categoryId)}</span>
-                          </div>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-[#1F1F1F]">
+                          {product.name}
                         </div>
-                        <div className="flex gap-2 ml-3">
+                      </td>
+                      <td className="px-6 py-4 text-sm text-[#666666]">
+                        {getCompanyName(product.companyId)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-[#666666]">
+                        {getCategoryName(product.categoryId)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {product.variants.map((variant) => (
+                            <span
+                              key={variant.id}
+                              className="inline-flex items-center rounded-full bg-[#EAE2FA] px-2 py-1 text-xs font-medium text-[#5E2BA8]"
+                            >
+                              {variant.name} - ₹{variant.mrp}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                            product.isOutOfStock
+                              ? "bg-red-100 text-red-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {product.isOutOfStock ? "Out of Stock" : "In Stock"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1 text-xs text-[#666666]">
+                          {product.availableInPieces && <span>✓ Pieces</span>}
+                          {product.availableInPack && (
+                            <span>✓ Pack of {product.packSize}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleEditProduct(product)}
                             className="rounded-lg p-2 text-[#666666] hover:bg-[#EAE2FA] hover:text-[#5E2BA8] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
@@ -846,49 +800,123 @@ export default function Products() {
                             >
                               <polyline points="3,6 5,6 21,6"></polyline>
                               <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                              <line x1="10" y1="11" x2="10" y2="17"></line>
+                              <line x1="14" y1="11" x2="14" y2="17"></line>
                             </svg>
                           </button>
                         </div>
-                      </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                      {/* Status and Availability */}
-                      <div className="flex items-center gap-3 mb-3">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                            product.isOutOfStock
-                              ? "bg-red-100 text-red-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {product.isOutOfStock ? "Out of Stock" : "In Stock"}
-                        </span>
-                        <div className="flex items-center gap-2 text-xs text-[#666666]">
-                          {product.availableInPieces && <span>✓ Pieces</span>}
-                          {product.availableInPack && (
-                            <span>✓ Pack of {product.packSize}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Variants */}
-                      <div>
-                        <div className="flex flex-wrap gap-1">
-                          {product.variants.map((variant) => (
-                            <span
-                              key={variant.id}
-                              className="inline-flex items-center rounded-full bg-[#EAE2FA] px-2 py-1 text-xs font-medium text-[#5E2BA8]"
-                            >
-                              {variant.name} - ₹{variant.mrp}
-                            </span>
-                          ))}
-                        </div>
+            {/* Mobile Card View */}
+            <div className="md:hidden">
+              {filteredProducts.map((product, index) => (
+                <div
+                  key={product.id}
+                  className={`p-4 ${
+                    index !== filteredProducts.length - 1
+                      ? "border-b border-[#DDDDDD]"
+                      : ""
+                  }`}
+                >
+                  {/* Product Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-[#1F1F1F] truncate">
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1 text-sm text-[#666666]">
+                        <span>{getCompanyName(product.companyId)}</span>
+                        <span>•</span>
+                        <span>{getCategoryName(product.categoryId)}</span>
                       </div>
                     </div>
-                  ))}
+                    <div className="flex gap-2 ml-3">
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        className="rounded-lg p-2 text-[#666666] hover:bg-[#EAE2FA] hover:text-[#5E2BA8] focus:outline-none focus:ring-2 focus:ring-[#9869E0]/20"
+                        aria-label="Edit product"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="rounded-lg p-2 text-[#666666] hover:bg-red-100 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                        aria-label="Delete product"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="3,6 5,6 21,6"></polyline>
+                          <path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Status and Availability */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                        product.isOutOfStock
+                          ? "bg-red-100 text-red-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {product.isOutOfStock ? "Out of Stock" : "In Stock"}
+                    </span>
+                    <div className="flex items-center gap-2 text-xs text-[#666666]">
+                      {product.availableInPieces && <span>✓ Pieces</span>}
+                      {product.availableInPack && (
+                        <span>✓ Pack of {product.packSize}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Variants */}
+                  <div>
+                    <div className="flex flex-wrap gap-1">
+                      {product.variants.map((variant) => (
+                        <span
+                          key={variant.id}
+                          className="inline-flex items-center rounded-full bg-[#EAE2FA] px-2 py-1 text-xs font-medium text-[#5E2BA8]"
+                        >
+                          {variant.name} - ₹{variant.mrp}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </>
-            )}
-          </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Manage Modal */}
       {isManageModalOpen && (

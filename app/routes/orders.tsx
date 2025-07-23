@@ -10,11 +10,7 @@ import Pagination from "~/components/orders/Pagination";
 import type { Order, CreateFormData } from "~/types/orders";
 import { statusColors, statusLabels } from "~/types/orders";
 import type { Customer } from "~/types/customers";
-import { 
-  useOrders, 
-  useCreateOrder, 
-  useDeleteOrder 
-} from "~/hooks/useOrders";
+import { useOrders, useCreateOrder, useDeleteOrder } from "~/hooks/useOrders";
 import { useCustomers } from "~/hooks/useCustomers";
 import { useProducts } from "~/hooks/useProducts";
 import { useCompanies } from "~/hooks/useCompanies";
@@ -465,11 +461,21 @@ export default function Orders() {
     }
 
     if (statusFilter.length > 0) {
-      params.status = statusFilter[0] as "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+      params.status = statusFilter[0] as
+        | "pending"
+        | "processing"
+        | "shipped"
+        | "delivered"
+        | "cancelled";
     }
 
     if (dateFilter && dateFilter !== "all") {
-      params.dateFilter = dateFilter as "today" | "yesterday" | "last7days" | "last30days" | "custom";
+      params.dateFilter = dateFilter as
+        | "today"
+        | "yesterday"
+        | "last7days"
+        | "last30days"
+        | "custom";
     }
 
     if (customStartDate) {
@@ -481,46 +487,19 @@ export default function Orders() {
     }
 
     return params;
-  }, [currentPage, searchTerm, statusFilter, dateFilter, customStartDate, customEndDate, sortBy, sortOrder]);
+  }, [
+    currentPage,
+    searchTerm,
+    statusFilter,
+    dateFilter,
+    customStartDate,
+    customEndDate,
+    sortBy,
+    sortOrder,
+  ]);
 
   // Fetch orders data
   const { data: ordersData, isLoading, error } = useOrders(queryParams);
-
-  // Get orders data from API
-  const orders = ordersData?.orders || [];
-  const pagination = ordersData?.pagination;
-
-  // Loading and error states
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9869E0] mx-auto mb-4"></div>
-            <p className="text-[#666666]">Loading orders...</p>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">Error loading orders</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="px-4 py-2 bg-[#9869E0] text-white rounded-lg hover:bg-[#7B40CC]"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -534,6 +513,37 @@ export default function Orders() {
     sortBy,
     sortOrder,
   ]);
+
+  // Get orders data from API
+  const orders = ordersData?.orders || [];
+  const pagination = ordersData?.pagination;
+
+  // Transform API orders to local Order type
+  const transformedOrders: Order[] = orders.map((apiOrder) => ({
+    id: apiOrder.id,
+    customerName: apiOrder.customerName,
+    customerAddress: apiOrder.customerAddress,
+    status: apiOrder.status,
+    date: apiOrder.date,
+    items: apiOrder.items,
+    customerEmail: apiOrder.customerEmail,
+    customerPhone: apiOrder.customerPhone,
+    orderItems:
+      apiOrder.orderItems?.map((item) => ({
+        id: item.id,
+        name: item.name,
+        boxes: item.boxes || 0,
+        pieces: item.pieces,
+        pack: item.pack,
+        productId: item.productId,
+        availableInPieces: item.availableInPieces,
+        availableInPack: item.availableInPack,
+        packSize: item.packSize,
+      })) || [],
+    shippingMethod: apiOrder.shippingMethod,
+    trackingNumber: apiOrder.trackingNumber,
+    notes: apiOrder.notes,
+  }));
 
   const handleSort = (field: "customerName" | "date" | "status") => {
     if (sortBy === field) {
@@ -615,10 +625,12 @@ export default function Orders() {
 
   const handleSaveOrder = (formData: CreateFormData) => {
     // Find the selected customer
-    const selectedCustomer = customersData?.customers?.find(c => c.id === formData.customerId);
-    
+    const selectedCustomer = customersData?.customers?.find(
+      (c) => c.id === formData.customerId
+    );
+
     if (!selectedCustomer) {
-      console.error('Selected customer not found');
+      console.error("Selected customer not found");
       return;
     }
 
@@ -629,18 +641,49 @@ export default function Orders() {
       customerEmail: formData.customerEmail,
       customerPhone: formData.customerPhone,
       status: formData.status,
-      orderItems: formData.orderItems.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity || 0,
+      orderItems: formData.orderItems.map((item) => ({
+        productId: item.productId!,
+        quantity: (item.boxes || 0) + (item.pieces || 0) + (item.pack || 0),
         boxes: item.boxes,
         pieces: item.pieces,
-        pack: item.pack
+        pack: item.pack,
       })),
-      shippingMethod: formData.shippingMethod,
-      notes: formData.notes
+      notes: formData.notes,
     });
     setIsCreateModalOpen(false);
   };
+
+  // Loading and error states
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9869E0] mx-auto mb-4"></div>
+            <p className="text-[#666666]">Loading orders...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading orders</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#9869E0] text-white rounded-lg hover:bg-[#7B40CC]"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -699,14 +742,15 @@ export default function Orders() {
       {/* Results Summary */}
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-[#666666]">
-          Showing {orders.length} of {pagination?.totalItems || 0} orders
+          Showing {transformedOrders.length} of {pagination?.totalItems || 0}{" "}
+          orders
         </p>
       </div>
 
       {/* Orders Table */}
       <div className="bg-white rounded-xl border border-[#DDDDDD] overflow-hidden">
         <OrdersTable
-          orders={orders}
+          orders={transformedOrders}
           onOrderClick={handleOrderClick}
           onDeleteClick={handleDeleteClick}
           statusColors={statusColors}
@@ -719,7 +763,10 @@ export default function Orders() {
             currentPage={pagination.currentPage}
             totalPages={pagination.totalPages}
             startIndex={(pagination.currentPage - 1) * pagination.itemsPerPage}
-            endIndex={Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}
+            endIndex={Math.min(
+              pagination.currentPage * pagination.itemsPerPage,
+              pagination.totalItems
+            )}
             totalItems={pagination.totalItems}
             onPageChange={setCurrentPage}
           />
