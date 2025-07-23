@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router";
+import { useState } from "react";
+import { useLogin, useAuth } from "../hooks/useAuth";
+import ProtectedRoute from "../components/auth/ProtectedRoute";
 import type { Route } from "./+types/home";
 
 export function meta({}: Route.MetaArgs) {
@@ -11,12 +13,60 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Home() {
-  const navigate = useNavigate();
+const LoginPage = () => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  
+  const loginMutation = useLogin();
+  const { isLoading } = useAuth();
 
-  const handleLogin = (event: React.FormEvent<HTMLFormElement>) => {
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
+    
+    if (!email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+    
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    navigate("/dashboard");
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      await loginMutation.mutateAsync({ email, password });
+    } catch (error) {
+      // Error is handled by the mutation
+      console.error('Login failed:', error);
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: undefined }));
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (errors.password) {
+      setErrors(prev => ({ ...prev, password: undefined }));
+    }
   };
 
   return (
@@ -60,10 +110,21 @@ export default function Home() {
                 type="email"
                 id="email"
                 name="email"
+                value={email}
+                onChange={handleEmailChange}
                 placeholder="you@example.com"
-                className="text-black w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className={`text-black w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
+                  errors.email 
+                    ? 'border-[#E74C3C] focus:ring-[#E74C3C]' 
+                    : 'border-gray-300 focus:ring-purple-500'
+                }`}
+                disabled={loginMutation.isPending}
               />
+              {errors.email && (
+                <p className="mt-1 text-sm text-[#E74C3C]">{errors.email}</p>
+              )}
             </div>
+            
             <div>
               <label
                 htmlFor="password"
@@ -75,20 +136,50 @@ export default function Home() {
                 type="password"
                 id="password"
                 name="password"
+                value={password}
+                onChange={handlePasswordChange}
                 placeholder="••••••••"
-                className="text-black w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className={`text-black w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
+                  errors.password 
+                    ? 'border-[#E74C3C] focus:ring-[#E74C3C]' 
+                    : 'border-gray-300 focus:ring-purple-500'
+                }`}
+                disabled={loginMutation.isPending}
               />
+              {errors.password && (
+                <p className="mt-1 text-sm text-[#E74C3C]">{errors.password}</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-3 mt-4">
               <button
                 type="submit"
-                className="w-full bg-gray-900 text-white py-2 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+                disabled={loginMutation.isPending}
+                className="w-full bg-gray-900 text-white py-2 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
               >
-                Log In
+                {loginMutation.isPending ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Logging in...
+                  </>
+                ) : (
+                  "Log In"
+                )}
               </button>
             </div>
           </form>
+          
+          <div className="mt-6 p-4 bg-[#F7F3FF] rounded-lg border border-[#D4C4F0]">
+            <p className="text-sm text-[#5E2BA8] font-medium mb-2">Demo Credentials:</p>
+            <p className="text-xs text-[#666666]">
+              Email: <span className="font-mono">admin@example.com</span><br />
+              Password: <span className="font-mono">password</span>
+            </p>
+          </div>
+          
           <p className="text-center text-sm text-gray-600 mt-8">
             Need an account?{" "}
             <a
@@ -112,5 +203,13 @@ export default function Home() {
         </div>
       </div>
     </div>
+  );
+};
+
+export default function Home() {
+  return (
+    <ProtectedRoute requireAuth={false}>
+      <LoginPage />
+    </ProtectedRoute>
   );
 }

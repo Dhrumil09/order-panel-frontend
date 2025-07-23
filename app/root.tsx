@@ -7,6 +7,9 @@ import {
   ScrollRestoration,
 } from "react-router";
 import { Suspense } from "react";
+import QueryProvider from "./providers/QueryProvider";
+import Notifications from "./components/ui/Notifications";
+import AuthInitializer from "./components/auth/AuthInitializer";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -33,27 +36,32 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-              <body>
-          {children}
-          <ScrollRestoration />
-          <Scripts />
-        </body>
+      <body>
+        {children}
+        <ScrollRestoration />
+        <Scripts />
+      </body>
     </html>
   );
 }
 
 export default function App() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#F9F9F9]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9869E0] mx-auto mb-4"></div>
-          <p className="text-[#666666] font-medium">Loading...</p>
-        </div>
-      </div>
-    }>
-      <Outlet />
-    </Suspense>
+    <QueryProvider>
+      <AuthInitializer>
+        <Notifications />
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center bg-[#F9F9F9]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9869E0] mx-auto mb-4"></div>
+              <p className="text-[#666666] font-medium">Loading...</p>
+            </div>
+          </div>
+        }>
+          <Outlet />
+        </Suspense>
+      </AuthInitializer>
+    </QueryProvider>
   );
 }
 

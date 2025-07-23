@@ -1,6 +1,49 @@
 // API Types for Admin Panel
 
 // ============================================================================
+// AUTHENTICATION TYPES
+// ============================================================================
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  data: {
+    user: {
+      id: string;
+      email: string;
+      name: string;
+      role: 'admin' | 'manager' | 'user';
+      createdAt: string;
+    };
+    token: string;
+    refreshToken: string;
+  };
+  message: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  success: boolean;
+  data: {
+    token: string;
+    refreshToken: string;
+  };
+  message: string;
+}
+
+export interface LogoutResponse {
+  success: boolean;
+  message: string;
+}
+
+// ============================================================================
 // DASHBOARD TYPES
 // ============================================================================
 
