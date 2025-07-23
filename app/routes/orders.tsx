@@ -498,8 +498,73 @@ export default function Orders() {
     sortOrder,
   ]);
 
+  // Debounced search term to prevent excessive API calls
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Use debounced search term for API calls
+  const debouncedQueryParams: OrderQueryParams = useMemo(() => {
+    const params: OrderQueryParams = {
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy,
+      sortOrder,
+    };
+
+    if (debouncedSearchTerm) {
+      params.search = debouncedSearchTerm;
+    }
+
+    if (statusFilter.length > 0) {
+      params.status = statusFilter[0] as
+        | "pending"
+        | "processing"
+        | "shipped"
+        | "delivered"
+        | "cancelled";
+    }
+
+    if (dateFilter && dateFilter !== "all") {
+      params.dateFilter = dateFilter as
+        | "today"
+        | "yesterday"
+        | "last7days"
+        | "last30days"
+        | "custom";
+    }
+
+    if (customStartDate) {
+      params.startDate = customStartDate;
+    }
+
+    if (customEndDate) {
+      params.endDate = customEndDate;
+    }
+
+    return params;
+  }, [
+    currentPage,
+    debouncedSearchTerm,
+    statusFilter,
+    dateFilter,
+    customStartDate,
+    customEndDate,
+    sortBy,
+    sortOrder,
+  ]);
+
   // Fetch orders data
-  const { data: ordersData, isLoading, error } = useOrders(queryParams);
+  const { data: ordersData, isLoading, error } = useOrders(debouncedQueryParams);
+
+  // Show loading state when search term changes but debounced term hasn't updated yet
+  const isSearching = searchTerm !== debouncedSearchTerm;
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -515,35 +580,42 @@ export default function Orders() {
   ]);
 
   // Get orders data from API
-  const orders = ordersData?.orders || [];
-  const pagination = ordersData?.pagination;
+  const orders = useMemo(() => {
+    return ordersData?.orders || [];
+  }, [ordersData?.orders]);
+
+  const pagination = useMemo(() => {
+    return ordersData?.pagination;
+  }, [ordersData?.pagination]);
 
   // Transform API orders to local Order type
-  const transformedOrders: Order[] = orders.map((apiOrder) => ({
-    id: apiOrder.id,
-    customerName: apiOrder.customerName,
-    customerAddress: apiOrder.customerAddress,
-    status: apiOrder.status,
-    date: apiOrder.date,
-    items: apiOrder.items,
-    customerEmail: apiOrder.customerEmail,
-    customerPhone: apiOrder.customerPhone,
-    orderItems:
-      apiOrder.orderItems?.map((item) => ({
-        id: item.id,
-        name: item.name,
-        boxes: item.boxes || 0,
-        pieces: item.pieces,
-        pack: item.pack,
-        productId: item.productId,
-        availableInPieces: item.availableInPieces,
-        availableInPack: item.availableInPack,
-        packSize: item.packSize,
-      })) || [],
-    shippingMethod: apiOrder.shippingMethod,
-    trackingNumber: apiOrder.trackingNumber,
-    notes: apiOrder.notes,
-  }));
+  const transformedOrders: Order[] = useMemo(() => {
+    return orders.map((apiOrder) => ({
+      id: apiOrder.id,
+      customerName: apiOrder.customerName,
+      customerAddress: apiOrder.customerAddress,
+      status: apiOrder.status,
+      date: apiOrder.date,
+      items: apiOrder.items,
+      customerEmail: apiOrder.customerEmail,
+      customerPhone: apiOrder.customerPhone,
+      orderItems:
+        apiOrder.orderItems?.map((item) => ({
+          id: item.id,
+          name: item.name,
+          boxes: item.boxes || 0,
+          pieces: item.pieces,
+          pack: item.pack,
+          productId: item.productId,
+          availableInPieces: item.availableInPieces,
+          availableInPack: item.availableInPack,
+          packSize: item.packSize,
+        })) || [],
+      shippingMethod: apiOrder.shippingMethod,
+      trackingNumber: apiOrder.trackingNumber,
+      notes: apiOrder.notes,
+    }));
+  }, [orders]);
 
   const handleSort = (field: "customerName" | "date" | "status") => {
     if (sortBy === field) {
@@ -654,7 +726,7 @@ export default function Orders() {
   };
 
   // Loading and error states
-  if (isLoading) {
+  if (isLoading || isSearching) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -741,10 +813,18 @@ export default function Orders() {
 
       {/* Results Summary */}
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-[#666666]">
-          Showing {transformedOrders.length} of {pagination?.totalItems || 0}{" "}
-          orders
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-[#666666]">
+            Showing {transformedOrders.length} of {pagination?.totalItems || 0}{" "}
+            orders
+          </p>
+          {isSearching && (
+            <div className="flex items-center gap-1 text-xs text-[#9869E0]">
+              <div className="animate-spin rounded-full h-3 w-3 border-b border-[#9869E0]"></div>
+              <span>Searching...</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Orders Table */}

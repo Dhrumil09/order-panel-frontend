@@ -96,8 +96,58 @@ export default function Customers() {
     sortOrder,
   ]);
 
+  // Debounced search term to prevent excessive API calls
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Use debounced search term for API calls
+  const debouncedQueryParams: CustomerQueryParams = useMemo(() => {
+    const params: CustomerQueryParams = {
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy,
+      sortOrder,
+    };
+
+    if (debouncedSearchTerm) {
+      params.search = debouncedSearchTerm;
+    }
+
+    if (statusFilter.length > 0) {
+      params.status = statusFilter[0] as "active" | "inactive" | "pending";
+    }
+
+    if (areaFilter.length > 0) {
+      params.area = areaFilter[0];
+    }
+
+    if (cityFilter.length > 0) {
+      params.city = cityFilter[0];
+    }
+
+    return params;
+  }, [
+    currentPage,
+    debouncedSearchTerm,
+    statusFilter,
+    areaFilter,
+    cityFilter,
+    sortBy,
+    sortOrder,
+  ]);
+
   // Fetch customers data
-  const { data: customersData, isLoading, error } = useCustomers(queryParams);
+  const { data: customersData, isLoading, error } = useCustomers(debouncedQueryParams);
+
+  // Show loading state when search term changes but debounced term hasn't updated yet
+  const isSearching = searchTerm !== debouncedSearchTerm;
 
   // Hierarchical location data structure
   const [locationData, setLocationData] = useState(() => {
@@ -167,14 +217,19 @@ export default function Customers() {
     return Object.keys(locationData).sort();
   }, [locationData]);
 
+  // Memoize customers data to prevent unnecessary re-renders
+  const customers = useMemo(() => {
+    return customersData?.customers || [];
+  }, [customersData?.customers]);
+
+  const pagination = useMemo(() => {
+    return customersData?.pagination;
+  }, [customersData?.pagination]);
+
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter, areaFilter, cityFilter, sortBy, sortOrder]);
-
-  // Get customers data from API
-  const customers = customersData?.customers || [];
-  const pagination = customersData?.pagination;
 
   const clearAllFilters = () => {
     setSearchTerm("");
@@ -339,7 +394,7 @@ export default function Customers() {
   };
 
   // Loading and error states
-  if (isLoading) {
+  if (isLoading || isSearching) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -465,9 +520,17 @@ export default function Customers() {
 
       {/* Results Summary */}
       <div className="mb-3 sm:mb-4 flex items-center justify-between">
-        <p className="text-xs sm:text-sm text-[#666666]">
-          Showing {customers.length} of {pagination?.totalItems || 0} customers
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs sm:text-sm text-[#666666]">
+            Showing {customers.length} of {pagination?.totalItems || 0} customers
+          </p>
+          {isSearching && (
+            <div className="flex items-center gap-1 text-xs text-[#9869E0]">
+              <div className="animate-spin rounded-full h-3 w-3 border-b border-[#9869E0]"></div>
+              <span>Searching...</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Customers Table */}
