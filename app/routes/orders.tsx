@@ -16,7 +16,10 @@ import {
   useDeleteOrder 
 } from "~/hooks/useOrders";
 import { useCustomers } from "~/hooks/useCustomers";
-import type { OrderQueryParams } from "../../api-types";
+import { useProducts } from "~/hooks/useProducts";
+import { useCompanies } from "~/hooks/useCompanies";
+import { useCategories } from "~/hooks/useCategories";
+import type { OrderQueryParams, ProductQueryParams } from "../../api-types";
 
 // Remove mock data - will be fetched from API
 
@@ -442,6 +445,11 @@ export default function Orders() {
   const createOrderMutation = useCreateOrder();
   const deleteOrderMutation = useDeleteOrder();
   const { data: customersData } = useCustomers({ limit: 100 }); // Get customers for order creation
+  
+  // Get products, companies, and categories for order creation
+  const { data: productsData } = useProducts({ limit: 100 }); // Get products for order creation
+  const { data: companiesData } = useCompanies(); // Get companies
+  const { data: categoriesData } = useCategories(); // Get categories
 
   // Build query parameters for API
   const queryParams: OrderQueryParams = useMemo(() => {
@@ -724,9 +732,9 @@ export default function Orders() {
         onClose={() => setIsCreateModalOpen(false)}
         onSave={handleSaveOrder}
         customers={customersData?.customers || []}
-        products={[]} // Will be fetched from API
-        companies={[]} // Will be fetched from API
-        categories={[]} // Will be fetched from API
+        products={productsData?.products || []}
+        companies={companiesData || []}
+        categories={categoriesData || []}
       />
 
       {/* Order Details Modal */}
