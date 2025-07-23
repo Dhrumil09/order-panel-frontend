@@ -1,85 +1,43 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/api-client';
-import { useDashboardStore } from '../lib/store';
+import { useUIStore } from '../lib/store';
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '../../api-types';
 
-// ============================================================================
-// DASHBOARD STATS QUERY
-// ============================================================================
-
+// Get dashboard statistics
 export const useDashboardStats = () => {
-  const { setStats, setLoading, setError, clearError } = useDashboardStore();
+  const { addNotification } = useUIStore();
 
   return useQuery({
     queryKey: ['dashboard', 'stats'],
     queryFn: async () => {
-      setLoading(true);
-      clearError();
-      
-      try {
-        const response = await apiClient.getDashboardStats();
-        if (response.success) {
-          setStats(response.data);
-          return response.data;
-        } else {
-          throw new Error('Failed to fetch dashboard stats');
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-        setError(errorMessage);
-        throw error;
-      } finally {
-        setLoading(false);
-      }
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    retry: (failureCount, error) => {
-      // Don't retry on 4xx errors
-      if (error instanceof Error && error.message.includes('HTTP 4')) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-  });
-};
-
-// ============================================================================
-// LATEST ORDERS QUERY
-// ============================================================================
-
-export const useLatestOrders = (limit: number = 5) => {
-  const { setLatestOrders, setError, clearError } = useDashboardStore();
-
-  return useQuery({
-    queryKey: ['dashboard', 'latest-orders', limit],
-    queryFn: async () => {
-      clearError();
-      
-      try {
-        const response = await apiClient.getLatestOrders(limit);
-        if (response.success) {
-          setLatestOrders(response.data.orders);
-          return response.data.orders;
-        } else {
-          throw new Error('Failed to fetch latest orders');
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-        setError(errorMessage);
-        throw error;
+      const response = await apiClient.getDashboardStats();
+      if (response.success) {
+        return response.data;
+      } else {
+        throw new Error(response.message || 'Failed to fetch dashboard stats');
       }
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
-    refetchOnWindowFocus: false,
-    retry: (failureCount, error) => {
-      if (error instanceof Error && error.message.includes('HTTP 4')) {
-        return false;
+  });
+};
+
+// Get latest orders
+export const useLatestOrders = (limit: number = 5) => {
+  const { addNotification } = useUIStore();
+
+  return useQuery({
+    queryKey: ['dashboard', 'latest-orders', limit],
+    queryFn: async () => {
+      const response = await apiClient.getLatestOrders(limit);
+      if (response.success) {
+        return response.data.orders;
+      } else {
+        throw new Error(response.message || 'Failed to fetch latest orders');
       }
-      return failureCount < 3;
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 

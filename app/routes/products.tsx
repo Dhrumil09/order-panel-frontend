@@ -1,39 +1,16 @@
 import { useState } from "react";
 import AdminLayout from "~/components/AdminLayout";
 import { createPageMeta } from "~/utils/meta";
+import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from "~/hooks/useProducts";
+import { useCompanies, useCreateCompany, useDeleteCompany } from "~/hooks/useCompanies";
+import { useCategories, useCreateCategory, useDeleteCategory } from "~/hooks/useCategories";
+import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from "../../api-types";
 
 export function meta() {
   return createPageMeta("Products", "Manage products.");
 }
 
-interface ProductVariant {
-  id: string;
-  name: string;
-  mrp: number;
-}
-
-interface Company {
-  id: string;
-  name: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  companyId: string;
-  categoryId: string;
-  variants: ProductVariant[];
-  isOutOfStock: boolean;
-  availableInPieces: boolean;
-  availableInPack: boolean;
-  packSize?: number;
-  createdAt: Date;
-}
+import type { Product, Company, Category, ProductVariant } from "../../api-types";
 
 interface Filters {
   selectedCompanies: string[];
@@ -68,7 +45,6 @@ const initialFilters: Filters = {
 };
 
 export default function Products() {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -76,53 +52,34 @@ export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [showFilters, setShowFilters] = useState(false);
-  const [manageTab, setManageTab] = useState<"companies" | "categories">(
-    "companies"
-  );
-
-  // Companies state
-  const [companies, setCompanies] = useState<Company[]>([
-    { id: "1", name: "Coffee Co." },
-    { id: "2", name: "Healthy Herbs" },
-  ]);
+  const [manageTab, setManageTab] = useState<"companies" | "categories">("companies");
   const [newCompanyName, setNewCompanyName] = useState("");
-
-  // Categories state
-  const [categories, setCategories] = useState<Category[]>([
-    { id: "1", name: "Beverages" },
-    { id: "2", name: "Tea & Infusions" },
-    { id: "3", name: "Snacks" },
-  ]);
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: "1",
-      name: "Premium Coffee Beans",
-      companyId: "1",
-      categoryId: "1",
-      variants: [
-        { id: "1", name: "250g", mrp: 299 },
-        { id: "2", name: "500g", mrp: 499 },
-      ],
-      isOutOfStock: false,
-      availableInPieces: true,
-      availableInPack: true,
-      packSize: 12,
-      createdAt: new Date(),
-    },
-    {
-      id: "2",
-      name: "Organic Green Tea",
-      companyId: "2",
-      categoryId: "2",
-      variants: [{ id: "1", name: "100g", mrp: 199 }],
-      isOutOfStock: true,
-      availableInPieces: true,
-      availableInPack: false,
-      createdAt: new Date(),
-    },
-  ]);
+  // API hooks
+  const { data: productsData, isLoading: productsLoading } = useProducts({
+    search: searchTerm || undefined,
+    companyId: filters.selectedCompanies.length > 0 ? filters.selectedCompanies : undefined,
+    categoryId: filters.selectedCategories.length > 0 ? filters.selectedCategories : undefined,
+    stockStatus: filters.stockStatus !== "all" ? filters.stockStatus : undefined,
+    availability: filters.availability !== "all" ? filters.availability : undefined,
+    minPrice: filters.priceRange.min > 0 ? filters.priceRange.min : undefined,
+    maxPrice: filters.priceRange.max < 1000 ? filters.priceRange.max : undefined,
+    sizeFilter: filters.sizeFilter || undefined,
+  });
+
+  const { data: companies = [] } = useCompanies();
+  const { data: categories = [] } = useCategories();
+
+  const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
+  const deleteProductMutation = useDeleteProduct();
+  const createCompanyMutation = useCreateCompany();
+  const deleteCompanyMutation = useDeleteCompany();
+  const createCategoryMutation = useCreateCategory();
+  const deleteCategoryMutation = useDeleteCategory();
+
+  const products = productsData?.products || [];
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -145,11 +102,15 @@ export default function Products() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    setProducts(products.filter((p) => p.id !== productId));
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await deleteProductMutation.mutateAsync(productId);
+    } catch (error) {
+      // Error handling is done in the mutation
+    }
   };
 
-  const handleSaveProduct = () => {
+  const handleSaveProduct = async () => {
     if (
       !formData.name ||
       !formData.companyId ||
@@ -159,8 +120,7 @@ export default function Products() {
       return;
     }
 
-    const productData: Product = {
-      id: editingProduct?.id || Date.now().toString(),
+    const productData = {
       name: formData.name,
       companyId: formData.companyId,
       categoryId: formData.categoryId,
@@ -169,20 +129,21 @@ export default function Products() {
       availableInPieces: formData.availableInPieces,
       availableInPack: formData.availableInPack,
       packSize: formData.availableInPack ? formData.packSize : undefined,
-      createdAt: editingProduct?.createdAt || new Date(),
     };
 
-    if (editingProduct) {
-      setProducts(
-        products.map((p) => (p.id === editingProduct.id ? productData : p))
-      );
-    } else {
-      setProducts([...products, productData]);
-    }
+    try {
+      if (editingProduct) {
+        await updateProductMutation.mutateAsync({ id: editingProduct.id, data: productData });
+      } else {
+        await createProductMutation.mutateAsync(productData);
+      }
 
-    setIsModalOpen(false);
-    setFormData(initialFormData);
-    setEditingProduct(null);
+      setIsModalOpen(false);
+      setFormData(initialFormData);
+      setEditingProduct(null);
+    } catch (error) {
+      // Error handling is done in the mutation
+    }
   };
 
   const handleAddVariant = () => {
@@ -220,35 +181,43 @@ export default function Products() {
   };
 
   // Company management functions
-  const handleAddCompany = () => {
+  const handleAddCompany = async () => {
     if (newCompanyName.trim()) {
-      const newCompany: Company = {
-        id: Date.now().toString(),
-        name: newCompanyName.trim(),
-      };
-      setCompanies([...companies, newCompany]);
-      setNewCompanyName("");
+      try {
+        await createCompanyMutation.mutateAsync({ name: newCompanyName.trim() });
+        setNewCompanyName("");
+      } catch (error) {
+        // Error handling is done in the mutation
+      }
     }
   };
 
-  const handleDeleteCompany = (companyId: string) => {
-    setCompanies(companies.filter((c) => c.id !== companyId));
+  const handleDeleteCompany = async (companyId: string) => {
+    try {
+      await deleteCompanyMutation.mutateAsync(companyId);
+    } catch (error) {
+      // Error handling is done in the mutation
+    }
   };
 
   // Category management functions
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (newCategoryName.trim()) {
-      const newCategory: Category = {
-        id: Date.now().toString(),
-        name: newCategoryName.trim(),
-      };
-      setCategories([...categories, newCategory]);
-      setNewCategoryName("");
+      try {
+        await createCategoryMutation.mutateAsync({ name: newCategoryName.trim() });
+        setNewCategoryName("");
+      } catch (error) {
+        // Error handling is done in the mutation
+      }
     }
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    setCategories(categories.filter((c) => c.id !== categoryId));
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      await deleteCategoryMutation.mutateAsync(categoryId);
+    } catch (error) {
+      // Error handling is done in the mutation
+    }
   };
 
   const handleCompanyFilter = (companyId: string) => {

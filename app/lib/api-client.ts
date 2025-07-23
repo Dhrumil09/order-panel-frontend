@@ -1,4 +1,4 @@
-// API Client for making HTTP requests
+// API Client for making HTTP requests - Updated to match Node.js API Specification
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-api-domain.com/api/v1'
@@ -101,9 +101,54 @@ const mockUser = {
   id: "1",
   email: "admin@example.com",
   name: "Admin User",
-  role: "admin" as const,
   createdAt: "2024-01-01T00:00:00Z"
 };
+
+// Mock products data
+const mockProducts = [
+  {
+    id: "1",
+    name: "Premium Coffee Beans",
+    companyId: "1",
+    categoryId: "1",
+    variants: [
+      { id: "1", name: "250g", mrp: 299 },
+      { id: "2", name: "500g", mrp: 499 },
+    ],
+    isOutOfStock: false,
+    availableInPieces: true,
+    availableInPack: true,
+    packSize: 12,
+    createdAt: "2024-01-01T00:00:00Z",
+    company: { id: "1", name: "Coffee Co." },
+    category: { id: "1", name: "Beverages" }
+  },
+  {
+    id: "2",
+    name: "Organic Green Tea",
+    companyId: "2",
+    categoryId: "2",
+    variants: [{ id: "1", name: "100g", mrp: 199 }],
+    isOutOfStock: true,
+    availableInPieces: true,
+    availableInPack: false,
+    createdAt: "2024-01-01T00:00:00Z",
+    company: { id: "2", name: "Healthy Herbs" },
+    category: { id: "2", name: "Tea & Infusions" }
+  }
+];
+
+// Mock companies and categories
+const mockCompanies = [
+  { id: "1", name: "Coffee Co.", productCount: 15 },
+  { id: "2", name: "Healthy Herbs", productCount: 8 }
+];
+
+const mockCategories = [
+  { id: "1", name: "Beverages", productCount: 25 },
+  { id: "2", name: "Tea & Infusions", productCount: 12 },
+  { id: "3", name: "Snacks", productCount: 18 }
+];
 
 class ApiClient {
   private async refreshTokenIfNeeded(): Promise<string | null> {
@@ -120,9 +165,8 @@ class ApiClient {
       });
 
       if (response.success) {
-        localStorage.setItem('authToken', response.data.token);
-        localStorage.setItem('refreshToken', response.data.refreshToken);
-        return response.data.token;
+        localStorage.setItem('authToken', response.data.accessToken);
+        return response.data.accessToken;
       }
     } catch (error) {
       // If refresh fails, clear all tokens
@@ -174,9 +218,9 @@ class ApiClient {
             return {
               success: true,
               data: {
-                user: mockUser,
-                token: 'mock-jwt-token',
-                refreshToken: 'mock-refresh-token'
+                accessToken: 'mock-access-token',
+                refreshToken: 'mock-refresh-token',
+                user: mockUser
               },
               message: 'Login successful'
             } as T;
@@ -185,21 +229,23 @@ class ApiClient {
           }
         }
         
-        if (endpoint === '/auth/logout') {
-          return {
-            success: true,
-            message: 'Logout successful'
-          } as T;
-        }
-        
         if (endpoint === '/auth/refresh') {
           return {
             success: true,
             data: {
-              token: 'new-mock-jwt-token',
-              refreshToken: 'new-mock-refresh-token'
+              accessToken: 'new-mock-access-token'
             },
             message: 'Token refreshed successfully'
+          } as T;
+        }
+        
+        if (endpoint === '/auth/me') {
+          return {
+            success: true,
+            data: {
+              user: mockUser
+            },
+            message: 'User retrieved successfully'
           } as T;
         }
         
@@ -219,6 +265,46 @@ class ApiClient {
               orders: mockLatestOrders
             },
             message: 'Latest orders retrieved successfully'
+          } as T;
+        }
+        
+        // Return mock data for products endpoints
+        if (endpoint === '/products') {
+          return {
+            success: true,
+            data: {
+              products: mockProducts,
+              pagination: {
+                currentPage: 1,
+                totalPages: 1,
+                totalItems: mockProducts.length,
+                itemsPerPage: 10,
+                hasNextPage: false,
+                hasPrevPage: false
+              }
+            },
+            message: 'Products retrieved successfully'
+          } as T;
+        }
+        
+        // Return mock data for companies and categories
+        if (endpoint === '/companies') {
+          return {
+            success: true,
+            data: {
+              companies: mockCompanies
+            },
+            message: 'Companies retrieved successfully'
+          } as T;
+        }
+        
+        if (endpoint === '/categories') {
+          return {
+            success: true,
+            data: {
+              categories: mockCategories
+            },
+            message: 'Categories retrieved successfully'
           } as T;
         }
       }
@@ -257,9 +343,9 @@ class ApiClient {
             return {
               success: true,
               data: {
-                user: mockUser,
-                token: 'mock-jwt-token',
-                refreshToken: 'mock-refresh-token'
+                accessToken: 'mock-access-token',
+                refreshToken: 'mock-refresh-token',
+                user: mockUser
               },
               message: 'Login successful (mock data)'
             } as T;
@@ -276,13 +362,21 @@ class ApiClient {
           } as T;
         }
         
-        if (endpoint.startsWith('/dashboard/latest-orders')) {
+        if (endpoint === '/products') {
           return {
             success: true,
             data: {
-              orders: mockLatestOrders
+              products: mockProducts,
+              pagination: {
+                currentPage: 1,
+                totalPages: 1,
+                totalItems: mockProducts.length,
+                itemsPerPage: 10,
+                hasNextPage: false,
+                hasPrevPage: false
+              }
             },
-            message: 'Latest orders retrieved successfully (mock data)'
+            message: 'Products retrieved successfully (mock data)'
           } as T;
         }
       }
@@ -306,10 +400,22 @@ class ApiClient {
     });
   }
 
+  async getCurrentUser() {
+    return this.request<import('../../api-types').AuthResponse>('/auth/me');
+  }
+
+  async getAllUsers() {
+    return this.request<import('../../api-types').UsersResponse>('/auth/users');
+  }
+
   async logout() {
-    return this.request<import('../../api-types').LogoutResponse>('/auth/logout', {
-      method: 'POST',
-    });
+    // For logout, we just clear local storage since the API doesn't require a call
+    if (isClient) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+    }
+    return { success: true, message: 'Logged out successfully' };
   }
 
   // Dashboard APIs
@@ -327,7 +433,11 @@ class ApiClient {
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          searchParams.append(key, String(value));
+          if (Array.isArray(value)) {
+            value.forEach(v => searchParams.append(key, v));
+          } else {
+            searchParams.append(key, String(value));
+          }
         }
       });
     }
@@ -355,6 +465,12 @@ class ApiClient {
   async deleteCustomer(id: string) {
     return this.request<import('../../api-types').DeleteCustomerResponse>(`/customers/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  async restoreCustomer(id: string) {
+    return this.request<import('../../api-types').RestoreCustomerResponse>(`/customers/${id}/restore`, {
+      method: 'PATCH',
     });
   }
 
@@ -399,13 +515,23 @@ class ApiClient {
     });
   }
 
+  async restoreOrder(id: string) {
+    return this.request<import('../../api-types').RestoreOrderResponse>(`/orders/${id}/restore`, {
+      method: 'PATCH',
+    });
+  }
+
   // Product APIs
   async getProducts(params?: import('../../api-types').ProductQueryParams) {
     const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          searchParams.append(key, String(value));
+          if (Array.isArray(value)) {
+            value.forEach(v => searchParams.append(key, v));
+          } else {
+            searchParams.append(key, String(value));
+          }
         }
       });
     }
@@ -436,6 +562,12 @@ class ApiClient {
     });
   }
 
+  async restoreProduct(id: string) {
+    return this.request<import('../../api-types').RestoreProductResponse>(`/products/${id}/restore`, {
+      method: 'PATCH',
+    });
+  }
+
   // Company & Category APIs
   async getCompanies() {
     return this.request<import('../../api-types').CompaniesResponse>('/companies');
@@ -454,6 +586,12 @@ class ApiClient {
     });
   }
 
+  async restoreCompany(id: string) {
+    return this.request<import('../../api-types').RestoreCompanyResponse>(`/companies/${id}/restore`, {
+      method: 'PATCH',
+    });
+  }
+
   async getCategories() {
     return this.request<import('../../api-types').CategoriesResponse>('/categories');
   }
@@ -468,6 +606,12 @@ class ApiClient {
   async deleteCategory(id: string) {
     return this.request<import('../../api-types').DeleteCategoryResponse>(`/categories/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  async restoreCategory(id: string) {
+    return this.request<import('../../api-types').RestoreCategoryResponse>(`/categories/${id}/restore`, {
+      method: 'PATCH',
     });
   }
 

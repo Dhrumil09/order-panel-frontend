@@ -10,7 +10,7 @@ const isClient = typeof window !== 'undefined';
 
 // Check if user is authenticated on app load
 export const useAuthCheck = () => {
-  const { user, token, refreshToken, setUser, setToken, setRefreshToken, setAuthenticated, setLoading } = useAuthStore();
+  const { user, setUser, setToken, setRefreshToken, setAuthenticated, setLoading } = useAuthStore();
   const { addNotification } = useUIStore();
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -44,11 +44,10 @@ export const useAuthCheck = () => {
         
         if (response.success) {
           // Update tokens
-          localStorage.setItem('authToken', response.data.token);
-          localStorage.setItem('refreshToken', response.data.refreshToken);
+          localStorage.setItem('authToken', response.data.accessToken);
           
-          setToken(response.data.token);
-          setRefreshToken(response.data.refreshToken);
+          setToken(response.data.accessToken);
+          setRefreshToken(storedRefreshToken);
           setUser(JSON.parse(storedUser));
           setAuthenticated(true);
           
@@ -92,12 +91,12 @@ export const useLogin = () => {
         if (response.success) {
           // Store tokens and user data only on client side
           if (isClient) {
-            localStorage.setItem('authToken', response.data.token);
+            localStorage.setItem('authToken', response.data.accessToken);
             localStorage.setItem('refreshToken', response.data.refreshToken);
             localStorage.setItem('user', JSON.stringify(response.data.user));
           }
           
-          login(response.data.token, response.data.user);
+          login(response.data.accessToken, response.data.user);
           addNotification({
             type: 'success',
             message: 'Login successful!',
