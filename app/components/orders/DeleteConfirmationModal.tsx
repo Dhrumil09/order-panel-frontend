@@ -9,7 +9,12 @@ interface DeleteConfirmationModalProps {
 
 import { statusLabels } from "~/types/orders";
 
-const DeleteConfirmationModal = ({ order, isOpen, onClose, onConfirm }: DeleteConfirmationModalProps) => {
+const DeleteConfirmationModal = ({
+  order,
+  isOpen,
+  onClose,
+  onConfirm,
+}: DeleteConfirmationModalProps) => {
   if (!isOpen || !order) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -25,8 +30,8 @@ const DeleteConfirmationModal = ({ order, isOpen, onClose, onConfirm }: DeleteCo
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -40,8 +45,18 @@ const DeleteConfirmationModal = ({ order, isOpen, onClose, onConfirm }: DeleteCo
             className="p-2 text-[#666666] hover:text-[#9869E0] hover:bg-[#F7F3FF] rounded-lg transition-colors"
             aria-label="Close modal"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -50,22 +65,40 @@ const DeleteConfirmationModal = ({ order, isOpen, onClose, onConfirm }: DeleteCo
         <div className="p-6">
           <div className="flex items-start gap-4 mb-6">
             <div className="w-12 h-12 bg-[#E74C3C] bg-opacity-20 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-[#E74C3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              <svg
+                className="w-6 h-6 text-[#E74C3C]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
               </svg>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-[#1F1F1F] mb-2">Are you sure?</h3>
+              <h3 className="text-lg font-semibold text-[#1F1F1F] mb-2">
+                Are you sure?
+              </h3>
               <p className="text-[#666666] mb-4">
-                You are about to delete order <span className="font-semibold text-[#1F1F1F]">{order.id}</span> for customer <span className="font-semibold text-[#1F1F1F]">{order.customerName}</span>. This action cannot be undone.
+                You are about to delete order{" "}
+                <span className="font-semibold text-[#1F1F1F]">{order.id}</span>{" "}
+                for customer{" "}
+                <span className="font-semibold text-[#1F1F1F]">
+                  {order.customerName}
+                </span>
+                . This action cannot be undone.
               </p>
               <div className="bg-[#F9F9F9] rounded-lg p-3">
                 <p className="text-sm text-[#666666]">
-                  <span className="font-medium">Order Details:</span><br />
-                  • Customer: {order.customerName}<br />
-                  • Date: {order.date}<br />
-                  • Status: {statusLabels[order.status]}<br />
-                  • Items: {order.items}
+                  <span className="font-medium">Order Details:</span>
+                  <br />• Customer: {order.customerName}
+                  <br />• Date: {order.date}
+                  <br />• Status: {statusLabels[order.status]}
+                  <br />• Items: {order.items}
                 </p>
               </div>
             </div>
@@ -80,7 +113,7 @@ const DeleteConfirmationModal = ({ order, isOpen, onClose, onConfirm }: DeleteCo
           >
             Cancel
           </button>
-          <button 
+          <button
             onClick={onConfirm}
             className="px-4 py-2 bg-[#E74C3C] text-white rounded-lg hover:bg-[#C0392B] transition-colors"
           >
@@ -92,4 +125,4 @@ const DeleteConfirmationModal = ({ order, isOpen, onClose, onConfirm }: DeleteCo
   );
 };
 
-export default DeleteConfirmationModal; 
+export default DeleteConfirmationModal;

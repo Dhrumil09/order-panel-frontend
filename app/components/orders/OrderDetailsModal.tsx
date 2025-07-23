@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { Order, OrderItem } from "~/types/orders";
+import { formatOrderDate } from "~/utils/dateUtils";
 
 interface OrderDetailsModalProps {
   order: Order | null;
@@ -102,7 +103,9 @@ const OrderDetailsModal = ({
             </div>
             <div className="text-right">
               <p className="text-sm text-[#666666]">Order Date</p>
-              <p className="font-medium text-[#1F1F1F]">{order.date}</p>
+              <p className="font-medium text-[#1F1F1F]">
+                {formatOrderDate(order.date)}
+              </p>
             </div>
           </div>
 
@@ -158,18 +161,10 @@ const OrderDetailsModal = ({
                         <th className="px-4 py-3 text-center text-sm font-medium text-[#1F1F1F]">
                           Pack
                         </th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-[#1F1F1F]">
-                          Total
-                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {order.orderItems.map((item) => {
-                        const totalPieces = item.pieces || 0;
-                        const totalPackPieces =
-                          (item.pack || 0) * (item.packSize || 1);
-                        const totalItems = totalPieces + totalPackPieces;
-
                         return (
                           <tr
                             key={item.id}
@@ -196,9 +191,6 @@ const OrderDetailsModal = ({
                             </td>
                             <td className="px-4 py-3 text-center text-[#1F1F1F]">
                               {item.availableInPack ? item.pack || 0 : "-"}
-                            </td>
-                            <td className="px-4 py-3 text-center font-medium text-[#1F1F1F]">
-                              {totalItems}
                             </td>
                           </tr>
                         );
