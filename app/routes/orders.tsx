@@ -10,95 +10,15 @@ import Pagination from "~/components/orders/Pagination";
 import type { Order, CreateFormData } from "~/types/orders";
 import { statusColors, statusLabels } from "~/types/orders";
 import type { Customer } from "~/types/customers";
+import { 
+  useOrders, 
+  useCreateOrder, 
+  useDeleteOrder 
+} from "~/hooks/useOrders";
+import { useCustomers } from "~/hooks/useCustomers";
+import type { OrderQueryParams } from "../../api-types";
 
-// Mock customer data for order creation
-const mockCustomers: Customer[] = [
-  {
-    id: "#CUST001",
-    shopName: "Kumar Electronics",
-    ownerName: "Rajesh Kumar",
-    ownerPhone: "+91 98765 43210",
-    ownerEmail: "rajesh.kumar@gmail.com",
-    address: "123 MG Road, Koramangala",
-    area: "Koramangala",
-    city: "Bangalore",
-    state: "Karnataka",
-    pincode: "560034",
-    status: "active",
-    registrationDate: "2024-01-15",
-    totalOrders: 45,
-    totalSpent: 125000,
-    notes: "Premium customer, prefers express delivery",
-  },
-  {
-    id: "#CUST002",
-    shopName: "Sharma Mobile Store",
-    ownerName: "Priya Sharma",
-    ownerPhone: "+91 87654 32109",
-    ownerEmail: "priya.sharma@yahoo.com",
-    address: "456 Andheri West, Near Station",
-    area: "Andheri West",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400058",
-    status: "active",
-    registrationDate: "2024-01-14",
-    totalOrders: 32,
-    totalSpent: 89000,
-    notes: "Bulk order customer",
-  },
-  {
-    id: "#CUST003",
-    shopName: "Patel Gadgets",
-    ownerName: "Amit Patel",
-    ownerPhone: "+91 76543 21098",
-    ownerEmail: "amit.patel@hotmail.com",
-    address: "789 Connaught Place, Central Delhi",
-    area: "Connaught Place",
-    city: "New Delhi",
-    state: "Delhi",
-    pincode: "110001",
-    status: "inactive",
-    registrationDate: "2024-01-13",
-    totalOrders: 18,
-    totalSpent: 45000,
-    notes: "Temporarily closed for renovation",
-  },
-  {
-    id: "#CUST004",
-    shopName: "Singh Tech Solutions",
-    ownerName: "Neha Singh",
-    ownerPhone: "+91 65432 10987",
-    ownerEmail: "neha.singh@gmail.com",
-    address: "321 Salt Lake City, Sector 1",
-    area: "Salt Lake City",
-    city: "Kolkata",
-    state: "West Bengal",
-    pincode: "700091",
-    status: "active",
-    registrationDate: "2024-01-12",
-    totalOrders: 67,
-    totalSpent: 189000,
-    notes: "High-value customer, VIP treatment",
-  },
-  {
-    id: "#CUST005",
-    shopName: "Reddy Digital Hub",
-    ownerName: "Vikram Reddy",
-    ownerPhone: "+91 54321 09876",
-    ownerEmail: "vikram.reddy@yahoo.com",
-    address: "654 Banjara Hills, Road No. 12",
-    area: "Banjara Hills",
-    city: "Hyderabad",
-    state: "Telangana",
-    pincode: "500034",
-    status: "pending",
-    registrationDate: "2024-01-11",
-    totalOrders: 0,
-    totalSpent: 0,
-    notes: "New registration, awaiting verification",
-  },
-];
+// Remove mock data - will be fetched from API
 
 // Mock product data for order creation
 interface ProductVariant {
@@ -518,103 +438,81 @@ export default function Orders() {
 
   const itemsPerPage = 5;
 
-  const filteredAndSortedOrders = useMemo(() => {
-    let filtered = mockOrders.filter((order) => {
-      const matchesSearch =
-        order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customerAddress
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        order.id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        statusFilter.length === 0 || statusFilter.includes(order.status);
+  // API hooks
+  const createOrderMutation = useCreateOrder();
+  const deleteOrderMutation = useDeleteOrder();
+  const { data: customersData } = useCustomers({ limit: 100 }); // Get customers for order creation
 
-      // Date filtering logic
-      const orderDate = new Date(order.date);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const lastWeek = new Date(today);
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      const lastMonth = new Date(today);
-      lastMonth.setMonth(lastMonth.getMonth() - 1);
+  // Build query parameters for API
+  const queryParams: OrderQueryParams = useMemo(() => {
+    const params: OrderQueryParams = {
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy,
+      sortOrder,
+    };
 
-      let matchesDate = true;
+    if (searchTerm) {
+      params.search = searchTerm;
+    }
 
-      // Handle custom date range
-      if (dateFilter === "custom" && customStartDate && customEndDate) {
-        const startDate = new Date(customStartDate);
-        const endDate = new Date(customEndDate);
-        endDate.setHours(23, 59, 59); // Include the entire end date
-        matchesDate = orderDate >= startDate && orderDate <= endDate;
-      } else {
-        switch (dateFilter) {
-          case "today":
-            matchesDate = orderDate.toDateString() === today.toDateString();
-            break;
-          case "yesterday":
-            matchesDate = orderDate.toDateString() === yesterday.toDateString();
-            break;
-          case "last7days":
-            matchesDate = orderDate >= lastWeek;
-            break;
-          case "last30days":
-            matchesDate = orderDate >= lastMonth;
-            break;
-          case "all":
-          default:
-            matchesDate = true;
-            break;
-        }
-      }
+    if (statusFilter.length > 0) {
+      params.status = statusFilter[0] as "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+    }
 
-      return matchesSearch && matchesStatus && matchesDate;
-    });
+    if (dateFilter && dateFilter !== "all") {
+      params.dateFilter = dateFilter as "today" | "yesterday" | "last7days" | "last30days" | "custom";
+    }
 
-    filtered.sort((a, b) => {
-      let aValue: string | Date;
-      let bValue: string | Date;
+    if (customStartDate) {
+      params.startDate = customStartDate;
+    }
 
-      switch (sortBy) {
-        case "customerName":
-          aValue = a.customerName.toLowerCase();
-          bValue = b.customerName.toLowerCase();
-          break;
-        case "date":
-          aValue = new Date(a.date);
-          bValue = new Date(b.date);
-          break;
-        case "status":
-          aValue = a.status;
-          bValue = b.status;
-          break;
-        default:
-          return 0;
-      }
+    if (customEndDate) {
+      params.endDate = customEndDate;
+    }
 
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
+    return params;
+  }, [currentPage, searchTerm, statusFilter, dateFilter, customStartDate, customEndDate, sortBy, sortOrder]);
 
-    return filtered;
-  }, [
-    searchTerm,
-    statusFilter,
-    sortBy,
-    sortOrder,
-    dateFilter,
-    customStartDate,
-    customEndDate,
-  ]);
+  // Fetch orders data
+  const { data: ordersData, isLoading, error } = useOrders(queryParams);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredAndSortedOrders.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedOrders = filteredAndSortedOrders.slice(startIndex, endIndex);
+  // Get orders data from API
+  const orders = ordersData?.orders || [];
+  const pagination = ordersData?.pagination;
+
+  // Loading and error states
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9869E0] mx-auto mb-4"></div>
+            <p className="text-[#666666]">Loading orders...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading orders</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-[#9869E0] text-white rounded-lg hover:bg-[#7B40CC]"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -692,15 +590,7 @@ export default function Orders() {
 
   const handleConfirmDelete = () => {
     if (orderToDelete) {
-      // Remove the order from the mock data
-      const orderIndex = mockOrders.findIndex(
-        (order) => order.id === orderToDelete.id
-      );
-      if (orderIndex !== -1) {
-        mockOrders.splice(orderIndex, 1);
-        // Force re-render by updating a state
-        setCurrentPage(currentPage);
-      }
+      deleteOrderMutation.mutate(orderToDelete.id);
     }
     setShowDeleteModal(false);
     setOrderToDelete(null);
@@ -716,35 +606,31 @@ export default function Orders() {
   };
 
   const handleSaveOrder = (formData: CreateFormData) => {
-    const newOrder: Order = {
-      id: `#ORD${String(mockOrders.length + 1).padStart(3, "0")}`,
+    // Find the selected customer
+    const selectedCustomer = customersData?.customers?.find(c => c.id === formData.customerId);
+    
+    if (!selectedCustomer) {
+      console.error('Selected customer not found');
+      return;
+    }
+
+    createOrderMutation.mutate({
+      customerId: formData.customerId,
       customerName: formData.customerName,
       customerAddress: formData.customerAddress,
       customerEmail: formData.customerEmail,
       customerPhone: formData.customerPhone,
       status: formData.status,
-      date: new Date().toISOString().split("T")[0],
-      items: formData.orderItems.reduce((sum: number, item) => {
-        const piecesTotal = item.pieces || 0;
-        const packTotal = (item.pack || 0) * (item.packSize || 1);
-        return sum + piecesTotal + packTotal;
-      }, 0),
-      orderItems: formData.orderItems.map((item) => ({
-        id: item.id,
-        name: item.name,
+      orderItems: formData.orderItems.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity || 0,
         boxes: item.boxes,
         pieces: item.pieces,
-        pack: item.pack,
-        productId: item.productId,
-        variantId: item.variantId,
-        availableInPieces: item.availableInPieces,
-        availableInPack: item.availableInPack,
-        packSize: item.packSize,
+        pack: item.pack
       })),
-      notes: formData.notes,
-    };
-
-    mockOrders.unshift(newOrder); // Add to beginning of array
+      shippingMethod: formData.shippingMethod,
+      notes: formData.notes
+    });
     setIsCreateModalOpen(false);
   };
 
@@ -805,14 +691,14 @@ export default function Orders() {
       {/* Results Summary */}
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-[#666666]">
-          Showing {filteredAndSortedOrders.length} of {mockOrders.length} orders
+          Showing {orders.length} of {pagination?.totalItems || 0} orders
         </p>
       </div>
 
       {/* Orders Table */}
       <div className="bg-white rounded-xl border border-[#DDDDDD] overflow-hidden">
         <OrdersTable
-          orders={paginatedOrders}
+          orders={orders}
           onOrderClick={handleOrderClick}
           onDeleteClick={handleDeleteClick}
           statusColors={statusColors}
@@ -820,14 +706,16 @@ export default function Orders() {
         />
 
         {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          startIndex={startIndex}
-          endIndex={endIndex}
-          totalItems={filteredAndSortedOrders.length}
-          onPageChange={setCurrentPage}
-        />
+        {pagination && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            startIndex={(pagination.currentPage - 1) * pagination.itemsPerPage}
+            endIndex={Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}
+            totalItems={pagination.totalItems}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
 
       {/* Create Order Modal */}
@@ -835,10 +723,10 @@ export default function Orders() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSave={handleSaveOrder}
-        customers={mockCustomers}
-        products={mockProducts}
-        companies={mockCompanies}
-        categories={mockCategories}
+        customers={customersData?.customers || []}
+        products={[]} // Will be fetched from API
+        companies={[]} // Will be fetched from API
+        categories={[]} // Will be fetched from API
       />
 
       {/* Order Details Modal */}

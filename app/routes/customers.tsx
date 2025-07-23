@@ -9,149 +9,19 @@ import CustomersFilters from "~/components/customers/CustomersFilters";
 import Pagination from "~/components/customers/Pagination";
 import type { Customer, CreateCustomerFormData } from "~/types/customers";
 import { statusColors, statusLabels } from "~/types/customers";
+import { 
+  useCustomers, 
+  useCreateCustomer, 
+  useDeleteCustomer, 
+  useLocations 
+} from "~/hooks/useCustomers";
+import type { CustomerQueryParams } from "../../api-types";
 
 export function meta() {
   return createPageMeta("Customers", "Manage customers.");
 }
 
-const mockCustomers: Customer[] = [
-  {
-    id: "#CUST001",
-    shopName: "Kumar Electronics",
-    ownerName: "Rajesh Kumar",
-    ownerPhone: "+91 98765 43210",
-    ownerEmail: "rajesh.kumar@gmail.com",
-    address: "123 MG Road, Koramangala",
-    area: "Koramangala",
-    city: "Bangalore",
-    state: "Karnataka",
-    pincode: "560034",
-    status: "active",
-    registrationDate: "2024-01-15",
-    totalOrders: 45,
-    totalSpent: 125000,
-    notes: "Premium customer, prefers express delivery"
-  },
-  {
-    id: "#CUST002",
-    shopName: "Sharma Mobile Store",
-    ownerName: "Priya Sharma",
-    ownerPhone: "+91 87654 32109",
-    ownerEmail: "priya.sharma@yahoo.com",
-    address: "456 Andheri West, Near Station",
-    area: "Andheri West",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400058",
-    status: "active",
-    registrationDate: "2024-01-14",
-    totalOrders: 32,
-    totalSpent: 89000,
-    notes: "Bulk order customer"
-  },
-  {
-    id: "#CUST003",
-    shopName: "Patel Gadgets",
-    ownerName: "Amit Patel",
-    ownerPhone: "+91 76543 21098",
-    ownerEmail: "amit.patel@hotmail.com",
-    address: "789 Connaught Place, Central Delhi",
-    area: "Connaught Place",
-    city: "New Delhi",
-    state: "Delhi",
-    pincode: "110001",
-    status: "inactive",
-    registrationDate: "2024-01-13",
-    totalOrders: 18,
-    totalSpent: 45000,
-    notes: "Temporarily closed for renovation"
-  },
-  {
-    id: "#CUST004",
-    shopName: "Singh Tech Solutions",
-    ownerName: "Neha Singh",
-    ownerPhone: "+91 65432 10987",
-    ownerEmail: "neha.singh@gmail.com",
-    address: "321 Salt Lake City, Sector 1",
-    area: "Salt Lake City",
-    city: "Kolkata",
-    state: "West Bengal",
-    pincode: "700091",
-    status: "active",
-    registrationDate: "2024-01-12",
-    totalOrders: 67,
-    totalSpent: 189000,
-    notes: "High-value customer, VIP treatment"
-  },
-  {
-    id: "#CUST005",
-    shopName: "Reddy Digital Hub",
-    ownerName: "Vikram Reddy",
-    ownerPhone: "+91 54321 09876",
-    ownerEmail: "vikram.reddy@yahoo.com",
-    address: "654 Banjara Hills, Road No. 12",
-    area: "Banjara Hills",
-    city: "Hyderabad",
-    state: "Telangana",
-    pincode: "500034",
-    status: "pending",
-    registrationDate: "2024-01-11",
-    totalOrders: 0,
-    totalSpent: 0,
-    notes: "New registration, awaiting verification"
-  },
-  {
-    id: "#CUST006",
-    shopName: "Gupta Electronics",
-    ownerName: "Anjali Gupta",
-    ownerPhone: "+91 43210 98765",
-    ownerEmail: "anjali.gupta@gmail.com",
-    address: "987 Vasant Vihar, Phase 1",
-    area: "Vasant Vihar",
-    city: "Chennai",
-    state: "Tamil Nadu",
-    pincode: "600057",
-    status: "active",
-    registrationDate: "2024-01-10",
-    totalOrders: 28,
-    totalSpent: 72000,
-    notes: "Regular customer, good payment history"
-  },
-  {
-    id: "#CUST007",
-    shopName: "Iyer Mobile World",
-    ownerName: "Suresh Iyer",
-    ownerPhone: "+91 32109 87654",
-    ownerEmail: "suresh.iyer@hotmail.com",
-    address: "147 Juhu Tara Road, Near Beach",
-    area: "Juhu",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400049",
-    status: "active",
-    registrationDate: "2024-01-09",
-    totalOrders: 89,
-    totalSpent: 245000,
-    notes: "Top performing customer, referral source"
-  },
-  {
-    id: "#CUST008",
-    shopName: "Nair Tech Store",
-    ownerName: "Meera Nair",
-    ownerPhone: "+91 21098 76543",
-    ownerEmail: "meera.nair@gmail.com",
-    address: "258 Indiranagar, 100 Feet Road",
-    area: "Indiranagar",
-    city: "Bangalore",
-    state: "Karnataka",
-    pincode: "560038",
-    status: "inactive",
-    registrationDate: "2024-01-08",
-    totalOrders: 12,
-    totalSpent: 28000,
-    notes: "Account suspended due to payment issues"
-  }
-];
+// Remove mock data - will be fetched from API
 
 export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -177,44 +47,83 @@ export default function Customers() {
 
   const itemsPerPage = 5;
 
+  // API hooks
+  const createCustomerMutation = useCreateCustomer();
+  const deleteCustomerMutation = useDeleteCustomer();
+  const { data: locationsData } = useLocations();
+
+  // Build query parameters for API
+  const queryParams: CustomerQueryParams = useMemo(() => {
+    const params: CustomerQueryParams = {
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy,
+      sortOrder,
+    };
+
+    if (searchTerm) {
+      params.search = searchTerm;
+    }
+
+    if (statusFilter.length > 0) {
+      params.status = statusFilter[0] as "active" | "inactive" | "pending";
+    }
+
+    if (areaFilter.length > 0) {
+      params.area = areaFilter[0];
+    }
+
+    if (cityFilter.length > 0) {
+      params.city = cityFilter[0];
+    }
+
+    return params;
+  }, [currentPage, searchTerm, statusFilter, areaFilter, cityFilter, sortBy, sortOrder]);
+
+  // Fetch customers data
+  const { data: customersData, isLoading, error } = useCustomers(queryParams);
+
   // Hierarchical location data structure
   const [locationData, setLocationData] = useState(() => {
-    // Initialize with data from mock customers
+    // Initialize with data from API locations
     const states: { [key: string]: { cities: { [key: string]: string[] } } } = {};
     
-    mockCustomers.forEach(customer => {
-      if (!states[customer.state]) {
-        states[customer.state] = { cities: {} };
+    // Add Gujarat and Ahmedabad as default
+    states["Gujarat"] = { 
+      cities: {
+        "Ahmedabad": [
+          "Satellite",
+          "Vastrapur", 
+          "Navrangpura",
+          "Paldi",
+          "Ellisbridge",
+          "Gujarat University",
+          "Stadium Road",
+          "Law Garden",
+          "Bodakdev",
+          "Thaltej"
+        ]
       }
-      if (!states[customer.state].cities[customer.city]) {
-        states[customer.state].cities[customer.city] = [];
-      }
-      if (!states[customer.state].cities[customer.city].includes(customer.area)) {
-        states[customer.state].cities[customer.city].push(customer.area);
-      }
-    });
-    
-    // Add Gujarat and Ahmedabad if they don't exist
-    if (!states["Gujarat"]) {
-      states["Gujarat"] = { cities: {} };
-    }
-    if (!states["Gujarat"].cities["Ahmedabad"]) {
-      states["Gujarat"].cities["Ahmedabad"] = [
-        "Satellite",
-        "Vastrapur", 
-        "Navrangpura",
-        "Paldi",
-        "Ellisbridge",
-        "Gujarat University",
-        "Stadium Road",
-        "Law Garden",
-        "Bodakdev",
-        "Thaltej"
-      ];
-    }
+    };
     
     return states;
   });
+
+  // Update location data when API data is available
+  useEffect(() => {
+    if (locationsData?.states) {
+      const newLocationData: { [key: string]: { cities: { [key: string]: string[] } } } = {};
+      
+      locationsData.states.forEach(state => {
+        newLocationData[state.name] = { cities: {} };
+        state.cities.forEach(city => {
+          newLocationData[state.name].cities[city.name] = city.areas;
+        });
+      });
+      
+      setLocationData(newLocationData);
+    }
+  }, [locationsData]);
 
   // Get unique areas and cities for filters (flattened for backward compatibility)
   const availableAreas = useMemo(() => {
@@ -239,60 +148,41 @@ export default function Customers() {
     return Object.keys(locationData).sort();
   }, [locationData]);
 
-  const filteredAndSortedCustomers = useMemo(() => {
-    let filtered = mockCustomers.filter(customer => {
-      const matchesSearch = customer.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           customer.ownerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           customer.ownerPhone.includes(searchTerm) ||
-                           customer.area.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           customer.city.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter.length === 0 || statusFilter.includes(customer.status);
-      const matchesArea = areaFilter.length === 0 || areaFilter.includes(customer.area);
-      const matchesCity = cityFilter.length === 0 || cityFilter.includes(customer.city);
-      
-      return matchesSearch && matchesStatus && matchesArea && matchesCity;
-    });
+  // Get customers data from API
+  const customers = customersData?.customers || [];
+  const pagination = customersData?.pagination;
 
-    filtered.sort((a, b) => {
-      let aValue: string | Date | number;
-      let bValue: string | Date | number;
+  // Loading and error states
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9869E0] mx-auto mb-4"></div>
+            <p className="text-[#666666]">Loading customers...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
-      switch (sortBy) {
-        case "shopName":
-          aValue = a.shopName.toLowerCase();
-          bValue = b.shopName.toLowerCase();
-          break;
-        case "ownerName":
-          aValue = a.ownerName.toLowerCase();
-          bValue = b.ownerName.toLowerCase();
-          break;
-        case "registrationDate":
-          aValue = new Date(a.registrationDate);
-          bValue = new Date(b.registrationDate);
-          break;
-        case "totalOrders":
-          aValue = a.totalOrders;
-          bValue = b.totalOrders;
-          break;
-        default:
-          return 0;
-      }
-
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-    return filtered;
-  }, [searchTerm, statusFilter, areaFilter, cityFilter, sortBy, sortOrder]);
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredAndSortedCustomers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedCustomers = filteredAndSortedCustomers.slice(startIndex, endIndex);
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading customers</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-[#9869E0] text-white rounded-lg hover:bg-[#7B40CC]"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -332,13 +222,7 @@ export default function Customers() {
 
   const handleConfirmDelete = () => {
     if (customerToDelete) {
-      // Remove the customer from the mock data
-      const customerIndex = mockCustomers.findIndex(customer => customer.id === customerToDelete.id);
-      if (customerIndex !== -1) {
-        mockCustomers.splice(customerIndex, 1);
-        // Force re-render by updating a state
-        setCurrentPage(currentPage);
-      }
+      deleteCustomerMutation.mutate(customerToDelete.id);
     }
     setShowDeleteModal(false);
     setCustomerToDelete(null);
@@ -354,8 +238,7 @@ export default function Customers() {
   };
 
   const handleSaveCustomer = (formData: CreateCustomerFormData) => {
-    const newCustomer: Customer = {
-      id: `#CUST${String(mockCustomers.length + 1).padStart(3, '0')}`,
+    createCustomerMutation.mutate({
       shopName: formData.shopName,
       ownerName: formData.ownerName,
       ownerPhone: formData.ownerPhone,
@@ -366,13 +249,8 @@ export default function Customers() {
       state: formData.state,
       pincode: formData.pincode,
       status: formData.status,
-      registrationDate: new Date().toISOString().split('T')[0],
-      totalOrders: 0,
-      totalSpent: 0,
       notes: formData.notes
-    };
-
-    mockCustomers.unshift(newCustomer); // Add to beginning of array
+    });
     setIsCreateModalOpen(false);
   };
 
@@ -554,14 +432,14 @@ export default function Customers() {
       {/* Results Summary */}
       <div className="mb-3 sm:mb-4 flex items-center justify-between">
         <p className="text-xs sm:text-sm text-[#666666]">
-          Showing {filteredAndSortedCustomers.length} of {mockCustomers.length} customers
+          Showing {customers.length} of {pagination?.totalItems || 0} customers
         </p>
       </div>
 
       {/* Customers Table */}
       <div className="bg-white rounded-xl border border-[#DDDDDD] overflow-hidden">
         <CustomersTable
-          customers={paginatedCustomers}
+          customers={customers}
           onCustomerClick={handleCustomerClick}
           onDeleteClick={handleDeleteClick}
           statusColors={statusColors}
@@ -569,14 +447,16 @@ export default function Customers() {
         />
 
         {/* Pagination */}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          startIndex={startIndex}
-          endIndex={endIndex}
-          totalItems={filteredAndSortedCustomers.length}
-          onPageChange={setCurrentPage}
-        />
+        {pagination && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            startIndex={(pagination.currentPage - 1) * pagination.itemsPerPage}
+            endIndex={Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}
+            totalItems={pagination.totalItems}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
 
       {/* Create Customer Modal */}
