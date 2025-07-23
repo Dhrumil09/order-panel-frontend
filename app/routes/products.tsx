@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminLayout from "~/components/AdminLayout";
 import { createPageMeta } from "~/utils/meta";
 import {
@@ -78,9 +78,20 @@ export default function Products() {
   const [newCompanyName, setNewCompanyName] = useState("");
   const [newCategoryName, setNewCategoryName] = useState("");
 
+  // Debounced search term to prevent excessive API calls
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // API hooks
   const { data: productsData, isLoading: productsLoading } = useProducts({
-    search: searchTerm || undefined,
+    search: debouncedSearchTerm || undefined,
     companyId:
       filters.selectedCompanies.length > 0
         ? filters.selectedCompanies
@@ -98,6 +109,9 @@ export default function Products() {
       filters.priceRange.max < MAX_PRICE ? filters.priceRange.max : undefined,
     sizeFilter: filters.sizeFilter || undefined,
   });
+
+  // Show loading state when search term changes but debounced term hasn't updated yet
+  const isSearching = searchTerm !== debouncedSearchTerm;
 
   const { data: companies = [] } = useCompanies();
   const { data: categories = [] } = useCategories();
@@ -645,13 +659,31 @@ export default function Products() {
 
       {/* Results Summary */}
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-[#666666]">
-          Showing {filteredProducts.length} of {products.length} products
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-[#666666]">
+            Showing {filteredProducts.length} of {products.length} products
+          </p>
+          {isSearching && (
+            <div className="flex items-center gap-1 text-xs text-[#9869E0]">
+              <div className="animate-spin rounded-full h-3 w-3 border-b border-[#9869E0]"></div>
+              <span>Searching...</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Products list */}
-      <div className="rounded-xl border border-[#DDDDDD] bg-white">
+      <div className="rounded-xl border border-[#DDDDDD] bg-white relative">
+        {(productsLoading || isSearching) && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9869E0] mx-auto mb-2"></div>
+              <p className="text-sm text-[#666666]">
+                {isSearching ? "Searching..." : "Loading products..."}
+              </p>
+            </div>
+          </div>
+        )}
         {filteredProducts.length === 0 ? (
           <div className="p-8 text-center">
             <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-[#EAE2FA] flex items-center justify-center">

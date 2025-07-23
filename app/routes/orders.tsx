@@ -725,20 +725,7 @@ export default function Orders() {
     setIsCreateModalOpen(false);
   };
 
-  // Loading and error states
-  if (isLoading || isSearching) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#9869E0] mx-auto mb-4"></div>
-            <p className="text-[#666666]">Loading orders...</p>
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
+  // Error state
   if (error) {
     return (
       <AdminLayout>
@@ -828,7 +815,17 @@ export default function Orders() {
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-xl border border-[#DDDDDD] overflow-hidden">
+      <div className="bg-white rounded-xl border border-[#DDDDDD] overflow-hidden relative">
+        {(isLoading || isSearching) && (
+          <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#9869E0] mx-auto mb-2"></div>
+              <p className="text-sm text-[#666666]">
+                {isSearching ? "Searching..." : "Loading orders..."}
+              </p>
+            </div>
+          </div>
+        )}
         <OrdersTable
           orders={transformedOrders}
           onOrderClick={handleOrderClick}
